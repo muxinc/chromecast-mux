@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 
-    <title>LG WebOS TV app</title>
+    <title>Chromecast app</title>
 
     <link rel="stylesheet" type="text/css" href="css/style.css"/>
     <script src="//www.gstatic.com/cast/sdk/libs/caf_receiver/v3/cast_receiver_framework.js"></script>
@@ -16,13 +16,6 @@
 </head>
 
 <body>
-    <div id="playbackControl" class="btn-group" style="position:absolute; top: 70%; width:100%; height:100px; margin: 20px auto 0 auto; background-color:red">
-        <button id="btnPlay" class="control-button">Play</button>
-        <button id="btnStop" class="control-button">Stop</button>
-        <button id="btnPause" class="control-button">Pause</button>
-        <button id="btnResume" class="control-button">Resume</button>
-        <button id="btnRewind" class="control-button">Rewind</button>
-        <button id="btnForward" class="control-button">Forward</button>
-    </div>
+    <cast-media-player id="thePlayer"></cast-media-player>
 </body>
 </html>
