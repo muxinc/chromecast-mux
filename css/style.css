@@ -1,0 +1,21 @@
+.btn-group button {
+    background-color: #4CAF50; /* Green background */
+    border: 1px solid green; /* Green border */
+    color: white; /* White text */
+    cursor: pointer; /* Pointer/hand icon */
+    float: left; /* Float the buttons side by side */
+}
+
+.btn-group button:not(:last-child) {
+    border-right: none; /* Prevent double borders */
+}
+
+.btn-group button:focus {
+    background-color: #3e8e41;
+}
+
+.control-button {
+    width: 16.6%;
+    height: 100%;
+    font-size: 3em;
+}
