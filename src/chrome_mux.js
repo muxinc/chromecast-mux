@@ -41,6 +41,9 @@ const monitorChromecastPlayer = function (player, options) {
   let contentType = undefined;
   let postUrl = undefined;
   let duration = 0;
+  let isPaused = false;
+  let videoSourceWidth = 0;
+  let videoSourceHeight = 0;
 
   // Allow mux to retrieve the current time - used to track buffering from the mux side
   // Return current playhead time in milliseconds
@@ -69,6 +72,9 @@ const monitorChromecastPlayer = function (player, options) {
       // You _should_ only provide these values if they are defined (i.e. not 'undefined')
       player_width: 0,
       player_height: 0,
+      player_is_pause: isPaused,
+      video_source_width: videoSourceWidth,
+      video_source_height: videoSourceHeight,
 
       // Preferred properties - these should be provided in this callback if possible
       // If any are missing, that is okay, but this will be a lack of data for the customer at a later time
@@ -77,33 +83,21 @@ const monitorChromecastPlayer = function (player, options) {
       player_preload_on: undefined,
       video_source_url: mediaUrl,
       video_source_mime_type: contentType,
+      video_source_duration: duration,
 
       // Optional properties - if you have them, send them, but if not, no big deal
       video_poster_url: postUrl,
       player_language_code: undefined,
     };
-
-    // Additional required properties
-    /*var state = webapis.avplay.getState();
-    stateData.player_is_paused = (state == 'NONE' || state == 'IDLE' || state == 'READY' || state == 'PAUSED');
-    if (videoSourceWidth != 0) {
-      stateData.video_source_width = videoSourceWidth;
-    }
-    if (videoSourceHeight != 0) {
-      stateData.video_source_height = videoSourceHeight;
-    }
-    // Additional peferred properties
-    if (lastPlayerState != 'NONE' && lastPlayerState != 'IDLE') {
-      const duration = duration;
-      stateData.video_source_duration = (duration == 0 ? Infinity : duration);
-    }*/
-
     return stateData;
   };
 
-  player.muxCoreListener = function(event) {
+  let isSeeking = false;
+  player.muxListener = function(event) {
+    console.log('MuxCast: event ' + event.type);
+    console.log(event);
     switch(event.type) {
-      case 'REQUEST_LOAD':
+      case cast.framework.events.EventType.REQUEST_LOAD:
         if (event.requestData.media != undefined &&
           event.requestData.media.metadata != undefined &&
           event.requestData.media.metadata.title != undefined) {
@@ -125,46 +119,77 @@ const monitorChromecastPlayer = function (player, options) {
           event.requestData.media.metadata.images != undefined) {
           postUrl = event.requestData.media.metadata.images[0].url;
         }
-        if (event.requestData.media != undefined &&
-          event.requestData.media.duration != undefined) {
-          duration = event.requestData.media.duration;
-        }
-        console.log('MuxCast: ' + title + ',' + autoplay + ',' + mediaUrl + ',' + postUrl + ',' + duration);
         break;
-      case 'ABORT':
-      case 'ENDED':
-      case 'MEDIA_FINISHED':
-      case 'REQUEST_STOP':
-      case 'LIVE_ENDED':
+      case cast.framework.events.EventType.MEDIA_FINISHED:
+      case cast.framework.events.EventType.LIVE_ENDED:
+        player.mux.emit('ended');
+        break;
+      case cast.framework.events.EventType.REQUEST_STOP:
         stopMonitor(player);
         break;
-    }
-  };
-  player.muxFineListener = function(event) {
-    switch(event.type) {
-      case 'TIME_UPDATE':
+      case cast.framework.events.EventType.MEDIA_STATUS:
+        if (event.mediaStatus.videoInfo != undefined) {
+          videoSourceWidth = event.mediaStatus.videoInfo.width;
+          videoSourceHeight = event.mediaStatus.videoInfo.height;
+        }
+        if (event.mediaStatus.media != undefined &&
+          event.mediaStatus.media.duration != undefined) {
+          duration = event.mediaStatus.media.duration;
+        }
+        break;
+      case cast.framework.events.EventType.SEEKING:
+        isSeeking = true;
+        break;
+      case cast.framework.events.EventType.PAUSE:
+        isPaused = true;
+        if (!isSeeking) {
+          player.mux.emit('pause');
+        }
+        break;
+      case cast.framework.events.EventType.PLAYING:
+        isPaused = false;
+        if (isSeeking) {
+          isSeeking = false;
+        } else {
+          player.mux.emit('playing');
+        }
+        break;
+      case cast.framework.events.EventType.ERROR:
+        player.mux.emit('error', {
+          player_error_code: event.detailedErrorCode,
+          player_error_message: event.error ? JSON.stringify(event.error) : 'Unknown Error'
+        });
+        break;
+      case cast.framework.events.EventType.BITRATE_CHANGED:
+        player.mux.emit('ratechange');
+        break;
+      case cast.framework.events.EventType.TIME_UPDATE:
         currentTime = event.currentMediaTime;
-        console.log('MuxCast: current time ' + currentTime);
+        player.mux.emit('timeupdate');
+        break;
+      case cast.framework.events.EventType.SEGMENT_DOWNLOADED:
         break;
       }
   };
-  player.addEventListener(cast.framework.events.category.CORE, player.muxCoreListener);
-  player.addEventListener(cast.framework.events.category.FINE, player.muxFineListener);
+  player.addEventListener(cast.framework.events.category.CORE,
+    player.muxListener);
+  player.addEventListener(cast.framework.events.category.FINE,
+      player.muxListener);
+  player.addEventListener(cast.framework.events.category.DEBUG,
+      player.muxListener);
 
   // Lastly, initialize the tracking
-  //mux.init(playerID, options);
+  mux.init(playerID, options);
+  player.mux.emit('loadstart');
 };
 
 const stopMonitor = function (player) {
-  if (player.muxCoreListener != undefined) {
-    console.log('MuxCast: deinit');
-    player.removeEventListener(player.muxCoreListener);
-    player.removeEventListener(player.muxFineListener);
+  if (player.muxListener != undefined) {
+    player.removeEventListener(player.muxListener);
     player.mux.emit('destroy');
     player.mux.emit = function(){};
   }
-  player.muxCoreListener = undefined;
-  player.muxFineListener = undefined;
+  player.muxListener = undefined;
 };
 
 export { monitorChromecastPlayer };

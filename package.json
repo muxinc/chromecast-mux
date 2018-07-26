@@ -14,7 +14,7 @@
     "package:build": "webpack --config webpack.prod.js",
     "package:remove-requirejs-support": "echo '(function(){var define=false;' > dist/chromecast-mux.js && cat build/chromecast-mux.js >> dist/chromecast-mux.js && echo '})();' >> dist/chromecast-mux.js",
     "package:bannerize": "bannerize dist/chromecast-mux.js --banner=scripts/banner.ejs",
-    "start": "webpack-dev-server --host 192.168.1.253 --open --config webpack.dev.js",
+    "start": "webpack-dev-server --host 192.168.0.158 --open --config webpack.dev.js",
     "deploy": "npm run package && babel-node scripts/deploy.js"
   },
   "dependencies": {},

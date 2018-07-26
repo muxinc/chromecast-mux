@@ -43,7 +43,6 @@ public class MainActivity extends AppCompatActivity {
                     .setStreamType(MediaInfo.STREAM_TYPE_BUFFERED)
                     .setContentType("videos/m3u8")
                     .setMetadata(movieMetadata)
-                    .setStreamDuration(597 * 1000)
                     .build();
             MediaLoadOptions options = new MediaLoadOptions.Builder().setAutoplay(true).build();
             final RemoteMediaClient remoteMediaClient = sessionManager.getCurrentCastSession().getRemoteMediaClient();
