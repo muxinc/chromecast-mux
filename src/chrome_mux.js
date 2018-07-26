@@ -172,6 +172,15 @@ const monitorChromecastPlayer = function (player, options) {
         player.mux.emit('timeupdate');
         break;
       case cast.framework.events.EventType.SEGMENT_DOWNLOADED:
+        let loadData = {
+          request_event_type: 'SEGMENT_DOWNLOADED',
+          request_start: Date.now() - event.downloadTime - 1,
+          request_response_start:  Date.now() - event.downloadTime,
+          request_response_end:  Date.now(),
+          request_bytes_loaded: event.size,
+          request_type: 'media'
+        };
+        player.mux.emit('requestcompleted', loadData);
         break;
       }
   };
