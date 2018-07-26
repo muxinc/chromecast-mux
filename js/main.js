@@ -6,7 +6,7 @@ var app = {
     chromecastMux.monitorChromecastPlayer(playerManager, {
       debug: true,
       data : {
-        env_key: 'hrca1hhidk4je5lbtcvjsj4sm',
+        env_key: '[YOUR ENVIRONMENT KEY]',
         player_init_time: Date.now(),
       }
     });

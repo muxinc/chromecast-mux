@@ -139,6 +139,10 @@ const monitorChromecastPlayer = function (player, options) {
         break;
       case cast.framework.events.EventType.SEEKING:
         isSeeking = true;
+        player.mux.emit('seeking');
+        break;
+      case cast.framework.events.EventType.SEEKED:
+        player.mux.emit('seeked');
         break;
       case cast.framework.events.EventType.PAUSE:
         isPaused = true;
