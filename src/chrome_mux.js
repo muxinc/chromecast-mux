@@ -74,7 +74,7 @@ const monitorChromecastPlayer = function (player, options) {
       // You _should_ only provide these values if they are defined (i.e. not 'undefined')
       player_width: 0,
       player_height: 0,
-      player_is_pause: isPaused,
+      player_is_paused: isPaused,
       video_source_width: videoSourceWidth,
       video_source_height: videoSourceHeight,
 
