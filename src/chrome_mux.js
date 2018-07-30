@@ -44,6 +44,8 @@ const monitorChromecastPlayer = function (player, options) {
   let isPaused = false;
   let videoSourceWidth = 0;
   let videoSourceHeight = 0;
+  let firstPlay = true;
+  let videoChanged = false;
 
   // Allow mux to retrieve the current time - used to track buffering from the mux side
   // Return current playhead time in milliseconds
@@ -119,10 +121,20 @@ const monitorChromecastPlayer = function (player, options) {
           event.requestData.media.metadata.images != undefined) {
           postUrl = event.requestData.media.metadata.images[0].url;
         }
+        if (firstPlay) {
+          firstPlay = false;
+        } else {
+          player.mux.emit('videochange', { video_title: title});
+          videoChanged = true;
+          player.mux.emit('ended');
+        }
+        player.mux.emit('loadstart');
         break;
       case cast.framework.events.EventType.MEDIA_FINISHED:
       case cast.framework.events.EventType.LIVE_ENDED:
-        player.mux.emit('ended');
+        if (!videoChanged)
+          player.mux.emit('ended');
+        videoChanged = false;
         break;
       case cast.framework.events.EventType.REQUEST_STOP:
         stopMonitor(player);
