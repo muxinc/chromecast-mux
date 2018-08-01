@@ -1,10 +1,8 @@
-// import window from 'global/window'; // Remove if you do not need to access the global `window`
-// import document from 'global/document'; // Remove if you do not need to access the global `document`
 import mux from 'mux-embed';
+import log from 'loglevel';
 
 const log = mux.log;
 const assign = mux.utils.assign;
-// const getComputedStyle = mux.utils.getComputedStyle; // If necessary to get
 
 // Helper function to generate "unique" IDs for the player if your player does not have one built in
 const generateShortId = function () {
@@ -12,21 +10,18 @@ const generateShortId = function () {
 };
 
 const monitorChromecastPlayer = function (player, options) {
-  // Accessor for event namespace if used by your player
-  // const YOURPLAYER_EVENTS = || {};
-
   // Prepare the data passed in
   options = options || {};
 
   options.data = assign({
-    player_software_name: 'Chromecast AVPlayer',
-    player_software_version: cast.framework.VERSION, // Replace with method to retrieve the version of the player as necessary
-    player_mux_plugin_name: 'Chromecast-mux',
+    player_software_name: 'Cast Application Framework Player',
+    player_software_version: cast.framework.VERSION,
+    player_mux_plugin_name: 'chromecast-mux',
     player_mux_plugin_version: '0.1.0',
   }, options.data);
 
   // Retrieve the ID and the player element
-  const playerID = generateShortId(); // Replace with your own ID if you have one that's unique per player in page
+  const playerID = generateShortId();
 
   // Enable customers to emit events through the player instance
   player.mux = {};
@@ -47,80 +42,57 @@ const monitorChromecastPlayer = function (player, options) {
   let firstPlay = true;
   let videoChanged = false;
 
-  // Allow mux to retrieve the current time - used to track buffering from the mux side
   // Return current playhead time in milliseconds
   options.getPlayheadTime = () => {
-    return currentTime * 1000;
+    return mux.utils.secondsToMs(currentTime);
   };
 
-  // Allow mux to automatically retrieve state information about the player on each event sent
-  // If these properties are not accessible through getters at runtime, you may need to set them
-  // on certain events and store them in a local variable, and return them in the method e.g.
-  //    let playerWidth, playerHeight;
-  //    player.on('resize', (width, height) => {
-  //      playerWidth = width;
-  //      playerHeight = height;
-  //    });
-  //    options.getStateData = () => {
-  //      return {
-  //        ...
-  //        player_width: playerWidth,
-  //        player_height: playerHeight
-  //      };
-  //    };
   options.getStateData = () => {
-    let stateData = {
-      // Required properties - these must be provided every time this is called
-      // You _should_ only provide these values if they are defined (i.e. not 'undefined')
-      player_width: 0,
+    return {
+      player_width: 0,     // Note: undocumented <div class="player" id="castPlayer"> has a player width and height
       player_height: 0,
       player_is_paused: isPaused,
       video_source_width: videoSourceWidth,
       video_source_height: videoSourceHeight,
 
-      // Preferred properties - these should be provided in this callback if possible
-      // If any are missing, that is okay, but this will be a lack of data for the customer at a later time
-      player_is_fullscreen: true,
       player_autoplay_on: autoplay,
       player_preload_on: undefined,
       video_source_url: mediaUrl,
       video_source_mime_type: contentType,
       video_source_duration: duration,
 
-      // Optional properties - if you have them, send them, but if not, no big deal
       video_poster_url: postUrl,
       player_language_code: undefined,
     };
-    return stateData;
   };
 
-  let isSeeking = false;
   player.muxListener = function(event) {
-    console.log('MuxCast: event ' + event.type);
-    console.log(event);
+    log.info('MuxCast: event ' + event.type);
+    log.info(event);
     switch(event.type) {
       case cast.framework.events.EventType.REQUEST_LOAD:
-        if (event.requestData.media != undefined &&
-          event.requestData.media.metadata != undefined &&
-          event.requestData.media.metadata.title != undefined) {
-          title = event.requestData.media.metadata.title;
+        if (event.requestData.media != undefined) {
+          if (event.requestData.media.contentId != undefined) {
+            mediaUrl = event.requestData.media.contentId;
+          }
+
+          if (event.requestData.media.contentType != undefined) {
+            contentType = event.requestData.media.contentType;
+          }
+
+          if (event.requestData.media.metadata != undefined) {
+            if (event.requestData.media.metadata.title != undefined) {
+              title = event.requestData.media.metadata.title;
+            }
+            if (event.requestData.media.metadata.images != undefined && event.requestData.media.metadata.images.length > 0) {
+              postUrl = event.requestData.media.metadata.images[0].url;
+            }
+          }
         }
         if (event.requestData.autoplay != undefined) {
           autoplay = event.requestData.autoplay;
         }
-        if (event.requestData.media != undefined &&
-          event.requestData.media.contentId != undefined) {
-          mediaUrl = event.requestData.media.contentId;
-        }
-        if (event.requestData.media != undefined &&
-          event.requestData.media.contentType != undefined) {
-          contentType = event.requestData.media.contentType;
-        }
-        if (event.requestData.media != undefined &&
-          event.requestData.media.metadata != undefined &&
-          event.requestData.media.metadata.images != undefined) {
-          postUrl = event.requestData.media.metadata.images[0].url;
-        }
+
         if (firstPlay) {
           firstPlay = false;
         } else {
@@ -141,6 +113,7 @@ const monitorChromecastPlayer = function (player, options) {
         break;
       case cast.framework.events.EventType.MEDIA_STATUS:
         if (event.mediaStatus.videoInfo != undefined) {
+          // Note: it appears the videoInfo field is always undefined
           videoSourceWidth = event.mediaStatus.videoInfo.width;
           videoSourceHeight = event.mediaStatus.videoInfo.height;
         }
@@ -150,7 +123,6 @@ const monitorChromecastPlayer = function (player, options) {
         }
         break;
       case cast.framework.events.EventType.SEEKING:
-        isSeeking = true;
         player.mux.emit('seeking');
         break;
       case cast.framework.events.EventType.SEEKED:
@@ -158,17 +130,14 @@ const monitorChromecastPlayer = function (player, options) {
         break;
       case cast.framework.events.EventType.PAUSE:
         isPaused = true;
-        if (!isSeeking) {
-          player.mux.emit('pause');
-        }
+        player.mux.emit('pause');
         break;
       case cast.framework.events.EventType.PLAYING:
-        isPaused = false;
-        if (isSeeking) {
-          isSeeking = false;
-        } else {
-          player.mux.emit('playing');
+        if (isPaused) {
+          player.mux.emit('play');
         }
+        isPaused = false;
+        player.mux.emit('playing');
         break;
       case cast.framework.events.EventType.ERROR:
         player.mux.emit('error', {
@@ -176,7 +145,7 @@ const monitorChromecastPlayer = function (player, options) {
           player_error_message: event.error ? JSON.stringify(event.error) : 'Unknown Error'
         });
         break;
-      case cast.framework.events.EventType.BITRATE_CHANGED:
+      case cast.framework.events.EventType.RATE_CHANGE:
         player.mux.emit('ratechange');
         break;
       case cast.framework.events.EventType.TIME_UPDATE:
@@ -184,11 +153,12 @@ const monitorChromecastPlayer = function (player, options) {
         player.mux.emit('timeupdate');
         break;
       case cast.framework.events.EventType.SEGMENT_DOWNLOADED:
+        let now = Date.now();
         let loadData = {
           request_event_type: 'SEGMENT_DOWNLOADED',
-          request_start: Date.now() - event.downloadTime - 1,
-          request_response_start:  Date.now() - event.downloadTime,
-          request_response_end:  Date.now(),
+          request_start: now - event.downloadTime - 1,
+          request_response_start: now - event.downloadTime,
+          request_response_end: now,
           request_bytes_loaded: event.size,
           request_type: 'media'
         };
@@ -196,16 +166,12 @@ const monitorChromecastPlayer = function (player, options) {
         break;
       }
   };
-  player.addEventListener(cast.framework.events.category.CORE,
-    player.muxListener);
-  player.addEventListener(cast.framework.events.category.FINE,
-      player.muxListener);
-  player.addEventListener(cast.framework.events.category.DEBUG,
-      player.muxListener);
+  player.addEventListener(cast.framework.events.category.CORE, player.muxListener);
+  player.addEventListener(cast.framework.events.category.FINE, player.muxListener);
+  player.addEventListener(cast.framework.events.category.DEBUG, player.muxListener);
 
   // Lastly, initialize the tracking
   mux.init(playerID, options);
-  player.mux.emit('loadstart');
 };
 
 const stopMonitor = function (player) {
