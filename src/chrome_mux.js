@@ -65,6 +65,7 @@ const monitorChromecastPlayer = function (player, options) {
     };
   };
 
+  let isSeeking = false;
   player.muxListener = function(event) {
     //log.info('MuxCast: event ' + event.type);
     //log.info(event);
@@ -123,6 +124,7 @@ const monitorChromecastPlayer = function (player, options) {
         }
         break;
       case cast.framework.events.EventType.SEEKING:
+        isSeeking = true;
         player.mux.emit('seeking');
         break;
       case cast.framework.events.EventType.SEEKED:
@@ -130,11 +132,16 @@ const monitorChromecastPlayer = function (player, options) {
         break;
       case cast.framework.events.EventType.PAUSE:
         isPaused = true;
-        player.mux.emit('pause');
+        if (!isSeeking) {
+          player.mux.emit('pause');
+        }
         break;
       case cast.framework.events.EventType.PLAYING:
         if (isPaused) {
           player.mux.emit('play');
+        }
+        if (isSeeking) {
+          isSeeking = false;
         }
         isPaused = false;
         player.mux.emit('playing');
