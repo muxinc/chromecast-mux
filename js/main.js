@@ -3,7 +3,7 @@ var app = {
     const context = cast.framework.CastReceiverContext.getInstance();
     const playerManager = context.getPlayerManager();
 
-    chromecastMux.monitorChromecastPlayer(playerManager, {
+    initChromecastMux(playerManager, {
       debug: true,
       data : {
         env_key: '[YOUR ENVIRONMENT KEY]',

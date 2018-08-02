@@ -1,5 +1,4 @@
-import mux from 'mux-embed';
-import log from 'loglevel';
+import mux from '../lib/mux';
 
 const log = mux.log;
 const assign = mux.utils.assign;
@@ -67,8 +66,8 @@ const monitorChromecastPlayer = function (player, options) {
   };
 
   player.muxListener = function(event) {
-    log.info('MuxCast: event ' + event.type);
-    log.info(event);
+    //log.info('MuxCast: event ' + event.type);
+    //log.info(event);
     switch(event.type) {
       case cast.framework.events.EventType.REQUEST_LOAD:
         if (event.requestData.media != undefined) {
@@ -101,6 +100,7 @@ const monitorChromecastPlayer = function (player, options) {
           player.mux.emit('ended');
         }
         player.mux.emit('loadstart');
+        player.mux.emit('play');
         break;
       case cast.framework.events.EventType.MEDIA_FINISHED:
       case cast.framework.events.EventType.LIVE_ENDED:
@@ -172,6 +172,7 @@ const monitorChromecastPlayer = function (player, options) {
 
   // Lastly, initialize the tracking
   mux.init(playerID, options);
+  player.mux.emit('playerready');
 };
 
 const stopMonitor = function (player) {
@@ -183,4 +184,4 @@ const stopMonitor = function (player) {
   player.muxListener = undefined;
 };
 
-export { monitorChromecastPlayer };
+export default monitorChromecastPlayer;

@@ -2,11 +2,11 @@ const path = require('path');
 const WebpackAutoInject = require('webpack-auto-inject-version');
 
 module.exports = {
-  entry: './src/chrome_mux.js',
+  entry: './src/entry.js',
   output: {
     filename: 'chromecast-mux.js',
     path: path.resolve(__dirname, 'build'),
-    library: 'chromecastMux',
+    library: 'initChromecastMux',
     libraryTarget: 'umd',
     umdNamedDefine: true
   },
