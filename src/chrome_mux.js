@@ -133,6 +133,10 @@ const monitorChromecastPlayer = function (player, options) {
       case cast.framework.events.EventType.PAUSE:
         isPaused = true;
         if (!isSeeking) {
+          // Note:
+          // When a seek happens, cast sdk sends the `cast.framework.events.EventType.PAUSE`.
+          // We need to suppress the player.mux.emit('pause') call, because if it goes out, in our data view, seek
+          // events will become pause event
           player.mux.emit('pause');
         }
         break;
