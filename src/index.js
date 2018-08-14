@@ -1,3 +1,4 @@
+/* global cast */
 import mux from 'mux-embed';
 
 const log = mux.log;
@@ -16,7 +17,7 @@ const monitorChromecastPlayer = function (player, options) {
     player_software_name: 'Cast Application Framework Player',
     player_software_version: cast.framework.VERSION,
     player_mux_plugin_name: 'chromecast-mux',
-    player_mux_plugin_version: '0.1.0',
+    player_mux_plugin_version: '[AIV]{version}[/AIV]'
   }, options.data);
 
   // Retrieve the ID and the player element
@@ -29,17 +30,18 @@ const monitorChromecastPlayer = function (player, options) {
   };
 
   let currentTime = 0;
-  let autoplay = undefined;
-  let title = undefined;
-  let mediaUrl = undefined;
-  let contentType = undefined;
-  let postUrl = undefined;
+  let autoplay;
+  let title;
+  let mediaUrl;
+  let contentType;
+  let postUrl;
   let duration = 0;
   let isPaused = false;
   let videoSourceWidth = 0;
   let videoSourceHeight = 0;
   let firstPlay = true;
   let videoChanged = false;
+  let isSeeking = false;
 
   // Return current playhead time in milliseconds
   options.getPlayheadTime = () => {
@@ -61,42 +63,40 @@ const monitorChromecastPlayer = function (player, options) {
       video_source_duration: duration,
 
       video_poster_url: postUrl,
-      player_language_code: undefined,
+      player_language_code: undefined
     };
   };
 
-  let isSeeking = false;
-  player.muxListener = function(event) {
-    //log.info('MuxCast: event ' + event.type);
-    //log.info(event);
-    switch(event.type) {
+  player.muxListener = function (event) {
+    log.info('MuxCast: event ', event);
+    switch (event.type) {
       case cast.framework.events.EventType.REQUEST_LOAD:
-        if (event.requestData.media != undefined) {
-          if (event.requestData.media.contentId != undefined) {
+        if (event.requestData.media !== undefined) {
+          if (event.requestData.media.contentId !== undefined) {
             mediaUrl = event.requestData.media.contentId;
           }
 
-          if (event.requestData.media.contentType != undefined) {
+          if (event.requestData.media.contentType !== undefined) {
             contentType = event.requestData.media.contentType;
           }
 
-          if (event.requestData.media.metadata != undefined) {
-            if (event.requestData.media.metadata.title != undefined) {
+          if (event.requestData.media.metadata !== undefined) {
+            if (event.requestData.media.metadata.title !== undefined) {
               title = event.requestData.media.metadata.title;
             }
-            if (event.requestData.media.metadata.images != undefined && event.requestData.media.metadata.images.length > 0) {
+            if (event.requestData.media.metadata.images !== undefined && event.requestData.media.metadata.images.length > 0) {
               postUrl = event.requestData.media.metadata.images[0].url;
             }
           }
         }
-        if (event.requestData.autoplay != undefined) {
+        if (event.requestData.autoplay !== undefined) {
           autoplay = event.requestData.autoplay;
         }
 
         if (firstPlay) {
           firstPlay = false;
         } else {
-          player.mux.emit('videochange', { video_title: title});
+          player.mux.emit('videochange', { video_title: title });
           videoChanged = true;
           player.mux.emit('ended');
         }
@@ -105,21 +105,22 @@ const monitorChromecastPlayer = function (player, options) {
         break;
       case cast.framework.events.EventType.MEDIA_FINISHED:
       case cast.framework.events.EventType.LIVE_ENDED:
-        if (!videoChanged)
+        if (!videoChanged) {
           player.mux.emit('ended');
+        }
         videoChanged = false;
         break;
       case cast.framework.events.EventType.REQUEST_STOP:
         stopMonitor(player);
         break;
       case cast.framework.events.EventType.MEDIA_STATUS:
-        if (event.mediaStatus.videoInfo != undefined) {
+        if (event.mediaStatus.videoInfo !== undefined) {
           // Note: it appears the videoInfo field is always undefined
           videoSourceWidth = event.mediaStatus.videoInfo.width;
           videoSourceHeight = event.mediaStatus.videoInfo.height;
         }
-        if (event.mediaStatus.media != undefined &&
-          event.mediaStatus.media.duration != undefined) {
+        if (event.mediaStatus.media !== undefined &&
+          event.mediaStatus.media.duration !== undefined) {
           duration = event.mediaStatus.media.duration;
         }
         break;
@@ -173,9 +174,10 @@ const monitorChromecastPlayer = function (player, options) {
           request_bytes_loaded: event.size,
           request_type: 'media'
         };
+
         player.mux.emit('requestcompleted', loadData);
         break;
-      }
+    }
   };
   player.addEventListener(cast.framework.events.category.CORE, player.muxListener);
   player.addEventListener(cast.framework.events.category.FINE, player.muxListener);
@@ -187,10 +189,10 @@ const monitorChromecastPlayer = function (player, options) {
 };
 
 const stopMonitor = function (player) {
-  if (player.muxListener != undefined) {
+  if (player.muxListener !== undefined) {
     player.removeEventListener(player.muxListener);
     player.mux.emit('destroy');
-    player.mux.emit = function(){};
+    player.mux.emit = function () {};
   }
   player.muxListener = undefined;
 };
