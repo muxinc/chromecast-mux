@@ -4,6 +4,7 @@
   "author": "Mux, Inc.",
   "description": "Mux analytics plugin for Chromecast",
   "main": "dist/chromecast-mux.js",
+  "license": "Apache-2.0",
   "scripts": {
     "nsp": "nsp check",
     "clean": "rm -rf build dist",
