@@ -1,4 +1,4 @@
-import mux from '../lib/mux';
+import mux from 'mux-embed';
 
 const log = mux.log;
 const assign = mux.utils.assign;
