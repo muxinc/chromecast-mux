@@ -4,4 +4,4 @@
  * in a browser, we have to do this.
  */
 
-module.exports = require('./chrome_mux.js').default;
+module.exports = require('./index.js').default;
