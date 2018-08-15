@@ -1,6 +1,6 @@
 # chromecast-mux
 
-This is the Mux Data SDK for Chromecast applications, providing performance analytics on your Chromecast applications.
+The official Mux Data SDK for Chromecast applications.
 
 ## SDK Overview
 
