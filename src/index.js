@@ -121,7 +121,7 @@ const monitorChromecastPlayer = function (player, options) {
         }
         if (event.mediaStatus.media !== undefined &&
           event.mediaStatus.media.duration !== undefined) {
-          duration = event.mediaStatus.media.duration;
+          duration = mux.utils.secondsToMs(event.mediaStatus.media.duration);
         }
         break;
       case cast.framework.events.EventType.SEEKING:
