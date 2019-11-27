@@ -10,8 +10,12 @@ const generateShortId = function () {
 };
 
 const monitorChromecastPlayer = function (player, options) {
-  // Prepare the data passed in
-  options = options || {};
+  const defaults = {
+    // Allow customers to be in full control of the "errors" that are fatal
+    automaticErrorTracking: true
+  };
+
+  options = assign(defaults, options);
 
   options.data = assign({
     player_software_name: 'Cast Application Framework Player',
@@ -152,6 +156,7 @@ const monitorChromecastPlayer = function (player, options) {
         player.mux.emit('playing');
         break;
       case cast.framework.events.EventType.ERROR:
+        if (!options.automaticErrorTracking) { return; }
         player.mux.emit('error', {
           player_error_code: event.detailedErrorCode,
           player_error_message: event.error ? JSON.stringify(event.error) : 'Unknown Error'
