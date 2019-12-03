@@ -202,7 +202,9 @@ const stopMonitor = function (player) {
   log.warn('stopMonitor called');
   if (typeof player.muxListener !== 'undefined') {
     log.warn('Removing event listener');
-    player.removeEventListener(player.muxListener);
+    player.removeEventListener(cast.framework.events.category.CORE, player.muxListener);
+    player.removeEventListener(cast.framework.events.category.FINE, player.muxListener);
+    player.removeEventListener(cast.framework.events.category.DEBUG, player.muxListener);
     log.warn('Removing the muxListener from the player');
     delete player.muxListener;
     log.warn('emitting destroy');
