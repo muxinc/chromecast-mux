@@ -53,6 +53,7 @@ const monitorChromecastPlayer = function (player, options) {
   };
 
   options.getStateData = () => {
+    if (typeof player.muxListener === 'undefined') { return {}; }
     return {
       player_width: 0,     // Note: undocumented <div class="player" id="castPlayer"> has a player width and height
       player_height: 0,
@@ -194,12 +195,12 @@ const monitorChromecastPlayer = function (player, options) {
 };
 
 const stopMonitor = function (player) {
-  if (player.muxListener !== undefined) {
+  if (typeof player.muxListener !== 'undefined') {
     player.removeEventListener(player.muxListener);
+    delete player.muxListener;
     player.mux.emit('destroy');
     player.mux.emit = function () {};
   }
-  player.muxListener = undefined;
 };
 
 export default monitorChromecastPlayer;
