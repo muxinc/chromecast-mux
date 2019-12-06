@@ -49,14 +49,11 @@ const monitorChromecastPlayer = function (player, options) {
 
   // Return current playhead time in milliseconds
   options.getPlayheadTime = () => {
-    log.warn('getPlayheadTime called');
     if (typeof player.muxListener === 'undefined') { return; }
-    log.warn('about to return the current time');
     return mux.utils.secondsToMs(currentTime);
   };
 
   options.getStateData = () => {
-    log.warn('getStateData called');
     if (typeof player.muxListener === 'undefined') { return {}; }
     return {
       player_width: 0,     // Note: undocumented <div class="player" id="castPlayer"> has a player width and height
@@ -199,17 +196,12 @@ const monitorChromecastPlayer = function (player, options) {
 };
 
 const stopMonitor = function (player) {
-  log.warn('stopMonitor called');
   if (typeof player.muxListener !== 'undefined') {
-    log.warn('Removing event listener');
     player.removeEventListener(cast.framework.events.category.CORE, player.muxListener);
     player.removeEventListener(cast.framework.events.category.FINE, player.muxListener);
     player.removeEventListener(cast.framework.events.category.DEBUG, player.muxListener);
-    log.warn('Removing the muxListener from the player');
     delete player.muxListener;
-    log.warn('emitting destroy');
     player.mux.emit('destroy');
-    log.warn('destroy emitted');
     player.mux.emit = function () {};
   }
 };
