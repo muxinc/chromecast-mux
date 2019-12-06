@@ -116,9 +116,6 @@ const monitorChromecastPlayer = function (player, options) {
         }
         videoChanged = false;
         break;
-      case cast.framework.events.EventType.REQUEST_STOP:
-        stopMonitor(player);
-        break;
       case cast.framework.events.EventType.MEDIA_STATUS:
         if (event.mediaStatus.videoInfo !== undefined) {
           // Note: it appears the videoInfo field is always undefined
@@ -193,17 +190,18 @@ const monitorChromecastPlayer = function (player, options) {
   // Lastly, initialize the tracking
   mux.init(playerID, options);
   player.mux.emit('playerready');
-};
 
-const stopMonitor = function (player) {
-  if (typeof player.muxListener !== 'undefined') {
-    player.removeEventListener(cast.framework.events.category.CORE, player.muxListener);
-    player.removeEventListener(cast.framework.events.category.FINE, player.muxListener);
-    player.removeEventListener(cast.framework.events.category.DEBUG, player.muxListener);
-    delete player.muxListener;
-    player.mux.emit('destroy');
-    player.mux.emit = function () {};
-  }
+  player.mux.destroy = function (player) {
+    if (typeof player.muxListener !== 'undefined') {
+      player.removeEventListener(cast.framework.events.category.CORE, player.muxListener);
+      player.removeEventListener(cast.framework.events.category.FINE, player.muxListener);
+      player.removeEventListener(cast.framework.events.category.DEBUG, player.muxListener);
+      delete player.muxListener;
+      player.mux.emit('destroy');
+      player.mux.emit = function () {};
+      player.mux.destroy = function () {};
+    }
+  };
 };
 
 export default monitorChromecastPlayer;
