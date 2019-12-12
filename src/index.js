@@ -10,8 +10,12 @@ const generateShortId = function () {
 };
 
 const monitorChromecastPlayer = function (player, options) {
-  // Prepare the data passed in
-  options = options || {};
+  const defaults = {
+    // Allow customers to be in full control of the "errors" that are fatal
+    automaticErrorTracking: true
+  };
+
+  options = assign(defaults, options);
 
   options.data = assign({
     player_software_name: 'Cast Application Framework Player',
@@ -45,10 +49,12 @@ const monitorChromecastPlayer = function (player, options) {
 
   // Return current playhead time in milliseconds
   options.getPlayheadTime = () => {
+    if (typeof player.muxListener === 'undefined') { return; }
     return mux.utils.secondsToMs(currentTime);
   };
 
   options.getStateData = () => {
+    if (typeof player.muxListener === 'undefined') { return {}; }
     return {
       player_width: 0,     // Note: undocumented <div class="player" id="castPlayer"> has a player width and height
       player_height: 0,
@@ -110,9 +116,6 @@ const monitorChromecastPlayer = function (player, options) {
         }
         videoChanged = false;
         break;
-      case cast.framework.events.EventType.REQUEST_STOP:
-        stopMonitor(player);
-        break;
       case cast.framework.events.EventType.MEDIA_STATUS:
         if (event.mediaStatus.videoInfo !== undefined) {
           // Note: it appears the videoInfo field is always undefined
@@ -152,6 +155,7 @@ const monitorChromecastPlayer = function (player, options) {
         player.mux.emit('playing');
         break;
       case cast.framework.events.EventType.ERROR:
+        if (!options.automaticErrorTracking) { return; }
         player.mux.emit('error', {
           player_error_code: event.detailedErrorCode,
           player_error_message: event.error ? JSON.stringify(event.error) : 'Unknown Error'
@@ -186,15 +190,18 @@ const monitorChromecastPlayer = function (player, options) {
   // Lastly, initialize the tracking
   mux.init(playerID, options);
   player.mux.emit('playerready');
-};
 
-const stopMonitor = function (player) {
-  if (player.muxListener !== undefined) {
-    player.removeEventListener(player.muxListener);
-    player.mux.emit('destroy');
-    player.mux.emit = function () {};
-  }
-  player.muxListener = undefined;
+  player.mux.destroy = function (player) {
+    if (typeof player.muxListener !== 'undefined') {
+      player.removeEventListener(cast.framework.events.category.CORE, player.muxListener);
+      player.removeEventListener(cast.framework.events.category.FINE, player.muxListener);
+      player.removeEventListener(cast.framework.events.category.DEBUG, player.muxListener);
+      delete player.muxListener;
+      player.mux.emit('destroy');
+      player.mux.emit = function () {};
+      player.mux.destroy = function () {};
+    }
+  };
 };
 
 export default monitorChromecastPlayer;
