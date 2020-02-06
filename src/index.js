@@ -3,7 +3,7 @@ import mux from 'mux-embed';
 
 const log = mux.log;
 const assign = mux.utils.assign;
-const getTimestamp = mux.utils.getTimestamp;
+const clock = mux.utils.clock;
 
 // Helper function to generate "unique" IDs for the player if your player does not have one built in
 const generateShortId = function () {
@@ -170,7 +170,7 @@ const monitorChromecastPlayer = function (player, options) {
         player.mux.emit('timeupdate');
         break;
       case cast.framework.events.EventType.SEGMENT_DOWNLOADED:
-        let now = getTimestamp();
+        let now = clock.now();
         let loadData = {
           request_event_type: 'SEGMENT_DOWNLOADED',
           request_start: now - event.downloadTime - 1,
