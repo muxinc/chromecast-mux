@@ -181,6 +181,23 @@ const monitorChromecastPlayer = function (player, options) {
 
         player.mux.emit('requestcompleted', loadData);
         break;
+      // Ad Events
+      // adpause event not present in chromecast documentation
+      case cast.framework.events.EventType.BREAK_STARTED:
+        player.mux.emit('adbreakstart');
+        break;
+      case cast.framework.events.EventType.BREAK_CLIP_LOADING:
+        player.mux.emit('adplay');
+        break;
+      case cast.framework.events.EventType.BREAK_CLIP_STARTED:
+        player.mux.emit('adplaying');
+        break;
+      case cast.framework.events.EventType.BREAK_CLIP_ENDED:
+        player.mux.emit('adended');
+        break;
+      case cast.framework.events.EventType.BREAK_ENDED:
+        player.mux.emit('adbreakend');
+        break;
     }
   };
   player.addEventListener(cast.framework.events.category.CORE, player.muxListener);
