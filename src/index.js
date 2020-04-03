@@ -46,6 +46,7 @@ const monitorChromecastPlayer = function (player, options) {
   let firstPlay = true;
   let videoChanged = false;
   let isSeeking = false;
+  let inAdBreak = false;
 
   // Return current playhead time in milliseconds
   options.getPlayheadTime = () => {
@@ -75,129 +76,141 @@ const monitorChromecastPlayer = function (player, options) {
 
   player.muxListener = function (event) {
     log.info('MuxCast: event ', event);
-    switch (event.type) {
-      case cast.framework.events.EventType.REQUEST_LOAD:
-        if (event.requestData.media !== undefined) {
-          if (event.requestData.media.contentId !== undefined) {
-            mediaUrl = event.requestData.media.contentId;
-          }
-
-          if (event.requestData.media.contentType !== undefined) {
-            contentType = event.requestData.media.contentType;
-          }
-
-          if (event.requestData.media.metadata !== undefined) {
-            if (event.requestData.media.metadata.title !== undefined) {
-              title = event.requestData.media.metadata.title;
+    if (inAdBreak === false) {
+      switch (event.type) {
+        case cast.framework.events.EventType.REQUEST_LOAD:
+          if (event.requestData.media !== undefined) {
+            if (event.requestData.media.contentId !== undefined) {
+              mediaUrl = event.requestData.media.contentId;
             }
-            if (event.requestData.media.metadata.images !== undefined && event.requestData.media.metadata.images.length > 0) {
-              postUrl = event.requestData.media.metadata.images[0].url;
+
+            if (event.requestData.media.contentType !== undefined) {
+              contentType = event.requestData.media.contentType;
+            }
+
+            if (event.requestData.media.metadata !== undefined) {
+              if (event.requestData.media.metadata.title !== undefined) {
+                title = event.requestData.media.metadata.title;
+              }
+              if (event.requestData.media.metadata.images !== undefined && event.requestData.media.metadata.images.length > 0) {
+                postUrl = event.requestData.media.metadata.images[0].url;
+              }
             }
           }
-        }
-        if (event.requestData.autoplay !== undefined) {
-          autoplay = event.requestData.autoplay;
-        }
+          if (event.requestData.autoplay !== undefined) {
+            autoplay = event.requestData.autoplay;
+          }
 
-        if (firstPlay) {
-          firstPlay = false;
-        } else {
-          player.mux.emit('videochange', { video_title: title });
-          videoChanged = true;
-          player.mux.emit('ended');
-        }
-        player.mux.emit('loadstart');
-        player.mux.emit('play');
-        break;
-      case cast.framework.events.EventType.MEDIA_FINISHED:
-      case cast.framework.events.EventType.LIVE_ENDED:
-        if (!videoChanged) {
-          player.mux.emit('ended');
-        }
-        videoChanged = false;
-        break;
-      case cast.framework.events.EventType.MEDIA_STATUS:
-        if (event.mediaStatus.videoInfo !== undefined) {
-          // Note: it appears the videoInfo field is always undefined
-          videoSourceWidth = event.mediaStatus.videoInfo.width;
-          videoSourceHeight = event.mediaStatus.videoInfo.height;
-        }
-        if (event.mediaStatus.media !== undefined &&
-          event.mediaStatus.media.duration !== undefined) {
-          duration = mux.utils.secondsToMs(event.mediaStatus.media.duration);
-        }
-        break;
-      case cast.framework.events.EventType.SEEKING:
-        isSeeking = true;
-        player.mux.emit('seeking');
-        break;
-      case cast.framework.events.EventType.SEEKED:
-        player.mux.emit('seeked');
-        break;
-      case cast.framework.events.EventType.PAUSE:
-        isPaused = true;
-        if (!isSeeking) {
-          // Note:
-          // When a seek happens, cast sdk sends the `cast.framework.events.EventType.PAUSE`.
-          // We need to suppress the player.mux.emit('pause') call, because if it goes out, in our data view, seek
-          // events will become pause event
-          player.mux.emit('pause');
-        }
-        break;
-      case cast.framework.events.EventType.PLAYING:
-        if (isPaused) {
+          if (firstPlay) {
+            firstPlay = false;
+          } else {
+            player.mux.emit('videochange', { video_title: title });
+            videoChanged = true;
+            player.mux.emit('ended');
+          }
+          player.mux.emit('loadstart');
           player.mux.emit('play');
-        }
-        if (isSeeking) {
-          isSeeking = false;
-        }
-        isPaused = false;
-        player.mux.emit('playing');
-        break;
-      case cast.framework.events.EventType.ERROR:
-        if (!options.automaticErrorTracking) { return; }
-        player.mux.emit('error', {
-          player_error_code: event.detailedErrorCode,
-          player_error_message: event.error ? JSON.stringify(event.error) : 'Unknown Error'
-        });
-        break;
-      case cast.framework.events.EventType.RATE_CHANGE:
-        player.mux.emit('ratechange');
-        break;
-      case cast.framework.events.EventType.TIME_UPDATE:
-        currentTime = event.currentMediaTime;
-        player.mux.emit('timeupdate');
-        break;
-      case cast.framework.events.EventType.SEGMENT_DOWNLOADED:
-        let now = Date.now();
-        let loadData = {
-          request_event_type: 'SEGMENT_DOWNLOADED',
-          request_start: now - event.downloadTime - 1,
-          request_response_start: now - event.downloadTime,
-          request_response_end: now,
-          request_bytes_loaded: event.size,
-          request_type: 'media'
-        };
+          break;
+        case cast.framework.events.EventType.MEDIA_FINISHED:
+        case cast.framework.events.EventType.LIVE_ENDED:
+          if (!videoChanged) {
+            player.mux.emit('ended');
+          }
+          videoChanged = false;
+          break;
+        case cast.framework.events.EventType.MEDIA_STATUS:
+          if (event.mediaStatus.videoInfo !== undefined) {
+            // Note: it appears the videoInfo field is always undefined
+            videoSourceWidth = event.mediaStatus.videoInfo.width;
+            videoSourceHeight = event.mediaStatus.videoInfo.height;
+          }
+          if (event.mediaStatus.media !== undefined &&
+            event.mediaStatus.media.duration !== undefined) {
+            duration = mux.utils.secondsToMs(event.mediaStatus.media.duration);
+          }
+          break;
+        case cast.framework.events.EventType.SEEKING:
+          isSeeking = true;
+          player.mux.emit('seeking');
+          break;
+        case cast.framework.events.EventType.SEEKED:
+          player.mux.emit('seeked');
+          break;
+        case cast.framework.events.EventType.PAUSE:
+          isPaused = true;
+          if (!isSeeking) {
+            // Note:
+            // When a seek happens, cast sdk sends the `cast.framework.events.EventType.PAUSE`.
+            // We need to suppress the player.mux.emit('pause') call, because if it goes out, in our data view, seek
+            // events will become pause event
+            player.mux.emit('pause');
+          }
+          break;
+        case cast.framework.events.EventType.PLAYING:
+          if (isPaused) {
+            player.mux.emit('play');
+          }
+          if (isSeeking) {
+            isSeeking = false;
+          }
+          isPaused = false;
+          player.mux.emit('playing');
+          break;
+        case cast.framework.events.EventType.ERROR:
+          if (!options.automaticErrorTracking) { return; }
+          player.mux.emit('error', {
+            player_error_code: event.detailedErrorCode,
+            player_error_message: event.error ? JSON.stringify(event.error) : 'Unknown Error'
+          });
+          break;
+        case cast.framework.events.EventType.RATE_CHANGE:
+          player.mux.emit('ratechange');
+          break;
+        case cast.framework.events.EventType.TIME_UPDATE:
+          currentTime = event.currentMediaTime;
+          player.mux.emit('timeupdate');
+          break;
+        case cast.framework.events.EventType.SEGMENT_DOWNLOADED:
+          let now = Date.now();
+          let loadData = {
+            request_event_type: 'SEGMENT_DOWNLOADED',
+            request_start: now - event.downloadTime - 1,
+            request_response_start: now - event.downloadTime,
+            request_response_end: now,
+            request_bytes_loaded: event.size,
+            request_type: 'media'
+          };
 
-        player.mux.emit('requestcompleted', loadData);
-        break;
+          player.mux.emit('requestcompleted', loadData);
+          break;
+
+        case cast.framework.events.EventType.BREAK_STARTED:
+          inAdBreak = true;
+          player.mux.emit('adbreakstart');
+          break;
+      }
+    }
+
+    if (inAdBreak === true) {
       // Ad Events
       // adpause event not present in chromecast documentation
-      case cast.framework.events.EventType.BREAK_STARTED:
-        player.mux.emit('adbreakstart');
-        break;
-      case cast.framework.events.EventType.BREAK_CLIP_LOADING:
-        player.mux.emit('adplay');
-        break;
-      case cast.framework.events.EventType.BREAK_CLIP_STARTED:
-        player.mux.emit('adplaying');
-        break;
-      case cast.framework.events.EventType.BREAK_CLIP_ENDED:
-        player.mux.emit('adended');
-        break;
-      case cast.framework.events.EventType.BREAK_ENDED:
-        player.mux.emit('adbreakend');
-        break;
+      // chromecast will mix player messages with ad messages, which screws us up right now
+      // seperating out these ad events and using inAdBreak to supress other messages until the adbreak is over
+      switch (event.type) {
+        case cast.framework.events.EventType.BREAK_CLIP_LOADING:
+          player.mux.emit('adplay');
+          break;
+        case cast.framework.events.EventType.BREAK_CLIP_STARTED:
+          player.mux.emit('adplaying');
+          break;
+        case cast.framework.events.EventType.BREAK_CLIP_ENDED:
+          player.mux.emit('adended');
+          break;
+        case cast.framework.events.EventType.BREAK_ENDED:
+          player.mux.emit('adbreakend');
+          inAdBreak = false;
+          break;
+      }
     }
   };
   player.addEventListener(cast.framework.events.category.CORE, player.muxListener);
