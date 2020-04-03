@@ -6,7 +6,7 @@ var app = {
     initChromecastMux(playerManager, {
       debug: true,
       data : {
-        env_key: '[YOUR ENVIRONMENT KEY]',
+        env_key: 'ikh9lsia6bh8pj5get2vnt6hm', // JW Testing
         player_init_time: Date.now(),
       }
     });
