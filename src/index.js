@@ -160,7 +160,8 @@ const monitorChromecastPlayer = function (player, options) {
           if (!options.automaticErrorTracking) { return; }
           player.mux.emit('error', {
             player_error_code: event.detailedErrorCode,
-            player_error_message: event.error ? JSON.stringify(event.error) : 'Unknown Error'
+            // player_error_message: event.error ? JSON.stringify(event.error) : 'Unknown Error'
+            player_error_message: event.reason
           });
           break;
         case cast.framework.events.EventType.RATE_CHANGE:
