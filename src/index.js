@@ -194,8 +194,8 @@ const monitorChromecastPlayer = function (player, options) {
     if (inAdBreak === true) {
       // Ad Events
       // adpause event not present in chromecast documentation
-      // chromecast will mix player messages with ad messages, which screws us up right now
-      // seperating out these ad events and using inAdBreak to supress other messages until the adbreak is over
+      // chromecast will mix player messages with ad messages
+      // seperating out these ad events and supressing other messages until the adbreak is over
       switch (event.type) {
         case cast.framework.events.EventType.BREAK_CLIP_LOADING:
           player.mux.emit('adplay');
@@ -204,7 +204,8 @@ const monitorChromecastPlayer = function (player, options) {
           player.mux.emit('adplaying');
           break;
         case cast.framework.events.EventType.BREAK_CLIP_ENDED:
-          event.endedReason && event.endedReason === 'ERROR' ? player.mux.emit('aderror') : player.mux.emit('adended');
+          if (event.endedReason && event.endedReason === 'ERROR') { player.mux.emit('aderror'); };
+          player.mux.emit('adended');
           break;
         case cast.framework.events.EventType.BREAK_ENDED:
           player.mux.emit('adbreakend');
