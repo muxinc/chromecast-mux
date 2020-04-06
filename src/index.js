@@ -68,14 +68,14 @@ const monitorChromecastPlayer = function (player, options) {
       video_source_url: mediaUrl,
       video_source_mime_type: contentType,
       video_source_duration: duration,
-
+      viewer_device_name: 'Chromecast',
       video_poster_url: postUrl,
       player_language_code: undefined
     };
   };
 
   player.muxListener = function (event) {
-    log.info('MuxCast: event ', event);
+    // log.info('MuxCast: event ', event);
     if (inAdBreak === false) {
       switch (event.type) {
         case cast.framework.events.EventType.REQUEST_LOAD:
@@ -205,6 +205,8 @@ const monitorChromecastPlayer = function (player, options) {
           break;
         case cast.framework.events.EventType.BREAK_CLIP_ENDED:
           player.mux.emit('adended');
+          log.info('ENDED EVENT');
+          log.info(event);
           break;
         case cast.framework.events.EventType.BREAK_ENDED:
           player.mux.emit('adbreakend');
