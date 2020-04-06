@@ -205,8 +205,7 @@ const monitorChromecastPlayer = function (player, options) {
           break;
         case cast.framework.events.EventType.BREAK_CLIP_ENDED:
           player.mux.emit('adended');
-          log.info('ENDED EVENT');
-          log.info(event);
+          log.info('[mux] ENDED REASON: ' + event.endedReason);
           break;
         case cast.framework.events.EventType.BREAK_ENDED:
           player.mux.emit('adbreakend');
