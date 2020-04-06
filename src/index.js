@@ -75,7 +75,7 @@ const monitorChromecastPlayer = function (player, options) {
   };
 
   player.muxListener = function (event) {
-    // log.info('MuxCast: event ', event);
+    log.info('MuxCast: event ', event);
     if (inAdBreak === false) {
       switch (event.type) {
         case cast.framework.events.EventType.REQUEST_LOAD:
@@ -204,8 +204,7 @@ const monitorChromecastPlayer = function (player, options) {
           player.mux.emit('adplaying');
           break;
         case cast.framework.events.EventType.BREAK_CLIP_ENDED:
-          player.mux.emit('adended');
-          log.info('[mux] ENDED REASON: ' + event.endedReason);
+          event.endedReason && event.endedReason === 'ERROR' ? player.mux.emit('aderror') : player.mux.emit('adended');
           break;
         case cast.framework.events.EventType.BREAK_ENDED:
           player.mux.emit('adbreakend');
