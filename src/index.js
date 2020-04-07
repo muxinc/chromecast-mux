@@ -12,7 +12,9 @@ const generateShortId = function () {
 const monitorChromecastPlayer = function (player, options) {
   const defaults = {
     // Allow customers to be in full control of the "errors" that are fatal
-    automaticErrorTracking: true
+    automaticErrorTracking: true,
+    // Allow customers to emit videoChange, or set this to true for us to attempt to do this
+    automaticVideoChange: false
   };
 
   options = assign(defaults, options);
@@ -103,7 +105,7 @@ const monitorChromecastPlayer = function (player, options) {
 
           if (firstPlay) {
             firstPlay = false;
-          } else {
+          } else if (options.automaticVideoChange) {
             player.mux.emit('videochange', { video_title: title });
             videoChanged = true;
             player.mux.emit('ended');
