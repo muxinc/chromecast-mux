@@ -119,8 +119,7 @@ const monitorChromecastPlayer = function (player, options) {
           videoChanged = false;
           break;
         case cast.framework.events.EventType.MEDIA_STATUS:
-          console.log('Stats: ' + cast.framework.Stats.width + ' ' + cast.framework.Stats.height);
-          console.log('Video Information: ' + cast.framework.messages.VideoInformation.width + ' ' + cast.framework.messages.VideoInformation.height);
+          console.log('mediaStatus: ' + event.mediaStatus + ' ' + event.mediaStatus.videoInfo);
           if (event.mediaStatus.videoInfo !== undefined) {
             // Note: it appears the videoInfo field is always undefined
             videoSourceWidth = event.mediaStatus.videoInfo.width;
@@ -219,6 +218,7 @@ const monitorChromecastPlayer = function (player, options) {
   player.addEventListener(cast.framework.events.category.CORE, player.muxListener);
   player.addEventListener(cast.framework.events.category.FINE, player.muxListener);
   player.addEventListener(cast.framework.events.category.DEBUG, player.muxListener);
+  player.addEventListener(cast.framework.Stats, player.muxListener);
 
   // Lastly, initialize the tracking
   mux.init(playerID, options);
