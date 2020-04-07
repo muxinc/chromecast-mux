@@ -78,12 +78,6 @@ const monitorChromecastPlayer = function (player, options) {
     log.info('MuxCast: event ', event);
     if (inAdBreak === false) {
       switch (event.type) {
-        case cast.framework.messages.VideoInformation:
-          console.log('Video Information: ' + cast.framework.messages.VideoInformation);
-          break;
-        case cast.framework.Stats:
-          console.log('Stats: ' + cast.framework.Stats);
-          break;
         case cast.framework.events.EventType.REQUEST_LOAD:
           if (event.requestData.media !== undefined) {
             if (event.requestData.media.contentId !== undefined) {
@@ -125,6 +119,8 @@ const monitorChromecastPlayer = function (player, options) {
           videoChanged = false;
           break;
         case cast.framework.events.EventType.MEDIA_STATUS:
+          console.log('Stats: ' + cast.framework.Stats);
+          console.log('Video Information: ' + cast.framework.messages.VideoInformation);
           if (event.mediaStatus.videoInfo !== undefined) {
             // Note: it appears the videoInfo field is always undefined
             videoSourceWidth = event.mediaStatus.videoInfo.width;
