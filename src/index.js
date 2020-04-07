@@ -119,8 +119,8 @@ const monitorChromecastPlayer = function (player, options) {
           videoChanged = false;
           break;
         case cast.framework.events.EventType.MEDIA_STATUS:
-          console.log('Stats: ' + cast.framework.Stats);
-          console.log('Video Information: ' + cast.framework.messages.VideoInformation);
+          console.log('Stats: ' + cast.framework.Stats.width + ' ' + cast.framework.Stats.height);
+          console.log('Video Information: ' + cast.framework.messages.VideoInformation.width + ' ' + cast.framework.messages.VideoInformation.height);
           if (event.mediaStatus.videoInfo !== undefined) {
             // Note: it appears the videoInfo field is always undefined
             videoSourceWidth = event.mediaStatus.videoInfo.width;
