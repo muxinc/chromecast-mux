@@ -49,7 +49,6 @@ const monitorChromecastPlayer = function (player, options) {
   let videoChanged = false;
   let isSeeking = false;
   let inAdBreak = false;
-  let stats = new cast.framework.Stats();
 
   // Return current playhead time in milliseconds
   options.getPlayheadTime = () => {
@@ -104,13 +103,17 @@ const monitorChromecastPlayer = function (player, options) {
             autoplay = event.requestData.autoplay;
           }
 
-          if (firstPlay) {
-            firstPlay = false;
-          } else if (options.automaticVideoChange) {
+          // the user is expecting us to detect video changes
+          if (options.automaticVideoChange && !firstPlay) {
+            player.mux.emit('ended');
             player.mux.emit('videochange', { video_title: title });
             videoChanged = true;
-            player.mux.emit('ended');
           }
+
+          if (firstPlay) {
+            firstPlay = false;
+          }
+
           player.mux.emit('loadstart');
           player.mux.emit('play');
           break;
@@ -122,7 +125,6 @@ const monitorChromecastPlayer = function (player, options) {
           videoChanged = false;
           break;
         case cast.framework.events.EventType.MEDIA_STATUS:
-          console.log('mediaStatus: ' + event.mediaStatus + ' ' + event.mediaStatus.videoInfo);
           if (event.mediaStatus.videoInfo !== undefined) {
             // Note: it appears the videoInfo field is always undefined
             videoSourceWidth = event.mediaStatus.videoInfo.width;
@@ -173,8 +175,6 @@ const monitorChromecastPlayer = function (player, options) {
         case cast.framework.events.EventType.TIME_UPDATE:
           currentTime = event.currentMediaTime;
           player.mux.emit('timeupdate');
-
-          console.log('STATS: ' + JSON.stringify(stats));
           break;
         case cast.framework.events.EventType.SEGMENT_DOWNLOADED:
           let now = Date.now();
