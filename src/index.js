@@ -49,6 +49,7 @@ const monitorChromecastPlayer = function (player, options) {
   let videoChanged = false;
   let isSeeking = false;
   let inAdBreak = false;
+  let stats = new cast.framework.Stats();
 
   // Return current playhead time in milliseconds
   options.getPlayheadTime = () => {
@@ -172,9 +173,8 @@ const monitorChromecastPlayer = function (player, options) {
         case cast.framework.events.EventType.TIME_UPDATE:
           currentTime = event.currentMediaTime;
           player.mux.emit('timeupdate');
-          let stats = new cast.framework.Stats();
 
-          console.log('STATS' + JSON.stringify(stats));
+          console.log('STATS: ' + JSON.stringify(stats));
           break;
         case cast.framework.events.EventType.SEGMENT_DOWNLOADED:
           let now = Date.now();
