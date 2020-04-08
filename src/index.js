@@ -158,6 +158,7 @@ const monitorChromecastPlayer = function (player, options) {
           }
           isPaused = false;
           player.mux.emit('playing');
+          console.log('STATS:' + new cast.framework.Stats());
           break;
         case cast.framework.events.EventType.ERROR:
           if (!options.automaticErrorTracking) { return; }
@@ -172,6 +173,7 @@ const monitorChromecastPlayer = function (player, options) {
         case cast.framework.events.EventType.TIME_UPDATE:
           currentTime = event.currentMediaTime;
           player.mux.emit('timeupdate');
+          console.log('STATS:' + new cast.framework.Stats());
           break;
         case cast.framework.events.EventType.SEGMENT_DOWNLOADED:
           let now = Date.now();
@@ -220,9 +222,6 @@ const monitorChromecastPlayer = function (player, options) {
   player.addEventListener(cast.framework.events.category.CORE, player.muxListener);
   player.addEventListener(cast.framework.events.category.FINE, player.muxListener);
   player.addEventListener(cast.framework.events.category.DEBUG, player.muxListener);
-  var stats = new cast.framework.Stats();
-
-  console.log(stats);
 
   // Lastly, initialize the tracking
   mux.init(playerID, options);
