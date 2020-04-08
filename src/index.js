@@ -49,6 +49,7 @@ const monitorChromecastPlayer = function (player, options) {
   let videoChanged = false;
   let isSeeking = false;
   let inAdBreak = false;
+  let adPlaying = false;
 
   // Return current playhead time in milliseconds
   options.getPlayheadTime = () => {
@@ -219,12 +220,23 @@ const monitorChromecastPlayer = function (player, options) {
         case cast.framework.events.EventType.BREAK_CLIP_LOADING:
           player.mux.emit('adplay');
           break;
+        case cast.framework.events.EventType.PLAY: // cater for playback events within ad breaks, not captured by BREAK_ events
+          if (adPlaying) { player.mux.emit('adplay'); };
+          break;
+        case cast.framework.events.EventType.PAUSE: // cater for playback events within ad breaks, not captured by BREAK_ events
+          if (adPlaying) { player.mux.emit('adpause'); };
+          break;
         case cast.framework.events.EventType.BREAK_CLIP_STARTED:
           player.mux.emit('adplaying');
+          adPlaying = true;
+          break;
+        case cast.framework.events.EventType.PLAYING: // cater for playback events within ad breaks, not captured by BREAK_ events
+          if (adPlaying) { player.mux.emit('adplaying'); };
           break;
         case cast.framework.events.EventType.BREAK_CLIP_ENDED:
           if (event.endedReason && event.endedReason === 'ERROR') { player.mux.emit('aderror'); };
           player.mux.emit('adended');
+          adPlaying = false;
           break;
         case cast.framework.events.EventType.BREAK_ENDED:
           player.mux.emit('adbreakend');
