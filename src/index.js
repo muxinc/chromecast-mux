@@ -164,10 +164,23 @@ const monitorChromecastPlayer = function (player, options) {
           break;
         case cast.framework.events.EventType.ERROR:
           if (!options.automaticErrorTracking) { return; }
-          player.mux.emit('error', {
-            player_error_code: event.detailedErrorCode,
-            player_error_message: event.error ? event.error.message : 'Unknown Error'
-          });
+          switch (event.detailedErrorCode) {
+            case 901:
+            case 902:
+              // specific errors to ads
+              player.mux.emit('aderror');
+              break;
+            case 903:
+            case 904:
+            // do nothing since these aren't fatal errors
+              break;
+            default:
+              player.mux.emit('error', {
+                player_error_code: event.detailedErrorCode,
+                player_error_message: event.error ? event.error.message : 'Unknown Error'
+              });
+              break;
+          }
           break;
         case cast.framework.events.EventType.RATE_CHANGE:
           player.mux.emit('ratechange');
