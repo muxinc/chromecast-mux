@@ -174,7 +174,7 @@ const monitorChromecastPlayer = function (player, options) {
           player.mux.emit('timeupdate');
           let stats = new cast.framework.Stats();
 
-          console.log('WIDTH: ' + stats.width + ' / HEIGHT: ' + stats.height);
+          console.log('STATS' + JSON.stringify(stats));
           break;
         case cast.framework.events.EventType.SEGMENT_DOWNLOADED:
           let now = Date.now();
