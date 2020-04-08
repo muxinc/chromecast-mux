@@ -220,6 +220,9 @@ const monitorChromecastPlayer = function (player, options) {
   player.addEventListener(cast.framework.events.category.CORE, player.muxListener);
   player.addEventListener(cast.framework.events.category.FINE, player.muxListener);
   player.addEventListener(cast.framework.events.category.DEBUG, player.muxListener);
+  var stats = new cast.framework.Stats();
+
+  console.log(stats);
 
   // Lastly, initialize the tracking
   mux.init(playerID, options);
