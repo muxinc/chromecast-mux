@@ -158,7 +158,6 @@ const monitorChromecastPlayer = function (player, options) {
           }
           isPaused = false;
           player.mux.emit('playing');
-          console.log('STATS:' + new cast.framework.Stats());
           break;
         case cast.framework.events.EventType.ERROR:
           if (!options.automaticErrorTracking) { return; }
@@ -173,7 +172,9 @@ const monitorChromecastPlayer = function (player, options) {
         case cast.framework.events.EventType.TIME_UPDATE:
           currentTime = event.currentMediaTime;
           player.mux.emit('timeupdate');
-          console.log('STATS:' + new cast.framework.Stats());
+          let stats = new cast.framework.Stats();
+
+          console.log('WIDTH: ' + stats.width + ' / HEIGHT: ' + stats.height);
           break;
         case cast.framework.events.EventType.SEGMENT_DOWNLOADED:
           let now = Date.now();
