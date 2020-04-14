@@ -217,21 +217,18 @@ const monitorChromecastPlayer = function (player, options) {
     }
 
     if (inAdBreak === true) {
-      // Ad Events
-      // adpause event not present in chromecast documentation
       // chromecast will mix player messages with ad messages
-      // seperating out these ad events and supressing other messages until the adbreak is over
+      // seperating out these ad events and supressing unneeded messages until the adbreak is over
       switch (event.type) {
         case cast.framework.events.EventType.BREAK_CLIP_LOADING:
           if (adBreakClips !== null && event.breakClipId !== undefined) {
-            let obj = adBreakClips.find(o => o.id === event.breakClipId);
+            let breakClip = adBreakClips.find(o => o.id === event.breakClipId);
+            let adAssetUrl = (breakClip !== undefined && breakClip.contentUrl !== undefined) ? breakClip.contentUrl : (breakClip !== undefined && breakClip.contentId !== undefined) ? breakClip.contentId : null;
 
-            if (obj !== undefined && obj.contentUrl !== undefined) { var adAssetUrl = obj.contentUrl; } else { adAssetUrl = null; }
-            if (obj !== undefined && obj.vastAdsRequest !== undefined && obj.vastAdsRequest.adTagUrl !== undefined) { var adTagUrl = obj.vastAdsRequest.adTagUrl; } else { adTagUrl = null; }
-
+            // Ad Tag URL is defined, but Chromecast does some weird auto-generated break clip stuff which doesn't carry the adTagUrl through to the generated breaks
+            // If google fix this, it can be added in the future
             player.mux.emit('adplay', {
-              ad_asset_url: adAssetUrl,
-              ad_tag_url: adTagUrl
+              ad_asset_url: adAssetUrl
             });
           } else {
             player.mux.emit('adplay');
