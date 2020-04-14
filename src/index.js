@@ -50,6 +50,7 @@ const monitorChromecastPlayer = function (player, options) {
   let isSeeking = false;
   let inAdBreak = false;
   let adPlaying = false;
+  let adBreakClips = null;
 
   // Return current playhead time in milliseconds
   options.getPlayheadTime = () => {
@@ -98,6 +99,10 @@ const monitorChromecastPlayer = function (player, options) {
               if (event.requestData.media.metadata.images !== undefined && event.requestData.media.metadata.images.length > 0) {
                 postUrl = event.requestData.media.metadata.images[0].url;
               }
+            }
+
+            if (event.requestData.media.breakClips !== undefined) {
+              adBreakClips = event.requestData.media.breakClips;
             }
           }
           if (event.requestData.autoplay !== undefined) {
@@ -218,7 +223,19 @@ const monitorChromecastPlayer = function (player, options) {
       // seperating out these ad events and supressing other messages until the adbreak is over
       switch (event.type) {
         case cast.framework.events.EventType.BREAK_CLIP_LOADING:
-          player.mux.emit('adplay');
+          if (adBreakClips !== null && event.breakClipId !== undefined) {
+            let obj = adBreakClips.find(o => o.id === event.breakClipId);
+
+            const adTagUrl = obj.vastAdsRequest !== undefined && obj.vastAdsRequest.adTagUrl !== undefined ? obj.vastAdsRequest.adTagUrl : undefined;
+            const adAssetUrl = obj.contentUrl !== undefined ? obj.contentUrl : undefined;
+
+            player.mux.emit('adplay', {
+              ad_asset_url: adAssetUrl,
+              ad_tag_url: adTagUrl
+            });
+          } else {
+            player.mux.emit('adplay');
+          }
           break;
         case cast.framework.events.EventType.PLAY: // cater for playback events within ad breaks, not captured by BREAK_ events
           if (adPlaying) { player.mux.emit('adplay'); };
