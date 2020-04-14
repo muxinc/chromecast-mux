@@ -226,9 +226,8 @@ const monitorChromecastPlayer = function (player, options) {
           if (adBreakClips !== null && event.breakClipId !== undefined) {
             let obj = adBreakClips.find(o => o.id === event.breakClipId);
 
-            var adAssetUrl = obj.contentUrl !== undefined ? obj.contentUrl : undefined;
-
-            if (obj.vastAdsRequest !== undefined && obj.vastAdsRequest.adTagUrl !== undefined) { var adTagUrl = obj.vastAdsRequest.adTagUrl; } else { adTagUrl === undefined; }
+            if (obj.contentUrl !== undefined) { var adAssetUrl = obj.contentUrl; } else { adAssetUrl = undefined; }
+            if (obj.vastAdsRequest !== undefined && obj.vastAdsRequest.adTagUrl !== undefined) { var adTagUrl = obj.vastAdsRequest.adTagUrl; } else { adTagUrl = undefined; }
 
             player.mux.emit('adplay', {
               ad_asset_url: adAssetUrl,
