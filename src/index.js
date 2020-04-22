@@ -80,7 +80,51 @@ const monitorChromecastPlayer = function (player, options) {
 
   player.muxListener = function (event) {
     log.info('MuxCast: event ', event);
-    if (inAdBreak === false) {
+
+    if (inAdBreak) {
+      // Chromecast will mix player messages with ad messages
+      // Seperating out these ad events and supressing unneeded messages until the adbreak is over
+      switch (event.type) {
+        case cast.framework.events.EventType.BREAK_CLIP_LOADING:
+          if (adBreakClips && event.breakClipId) {
+            let breakClip = adBreakClips.find(o => o.id === event.breakClipId) || {};
+            let adAssetUrl = breakClip.contentUrl || breakClip.contentId;
+
+            // Ad Tag URL is defined, but Chromecast does some weird auto-generated break clip stuff which doesn't carry the adTagUrl through to the generated breaks
+            // If google fix this, it can be added in the future
+            player.mux.emit('adplay', {
+              ad_asset_url: adAssetUrl
+            });
+          } else {
+            player.mux.emit('adplay');
+          }
+          break;
+        case cast.framework.events.EventType.PLAY: // cater for playback events within ad breaks, not captured by BREAK_ events
+          if (adPlaying) { player.mux.emit('adplay'); };
+          break;
+        case cast.framework.events.EventType.PAUSE: // cater for playback events within ad breaks, not captured by BREAK_ events
+          if (adPlaying) { player.mux.emit('adpause'); };
+          break;
+        case cast.framework.events.EventType.BREAK_CLIP_STARTED:
+          player.mux.emit('adplaying');
+          adPlaying = true;
+          break;
+        case cast.framework.events.EventType.PLAYING: // cater for playback events within ad breaks, not captured by BREAK_ events
+          if (adPlaying) { player.mux.emit('adplaying'); };
+          break;
+        case cast.framework.events.EventType.BREAK_CLIP_ENDED:
+          if (event.endedReason && event.endedReason === 'ERROR') { player.mux.emit('aderror'); };
+          player.mux.emit('adended');
+          adPlaying = false;
+          break;
+        case cast.framework.events.EventType.BREAK_ENDED:
+          player.mux.emit('adbreakend');
+          adPlaying = false;
+          inAdBreak = false;
+          break;
+      }
+    } else {
+      // Not in an adbreak, regular playback monitoring
       switch (event.type) {
         case cast.framework.events.EventType.REQUEST_LOAD:
           if (event.requestData.media !== undefined) {
@@ -116,9 +160,7 @@ const monitorChromecastPlayer = function (player, options) {
             videoChanged = true;
           }
 
-          if (firstPlay) {
-            firstPlay = false;
-          }
+          firstPlay = false;
 
           player.mux.emit('loadstart');
           player.mux.emit('play');
@@ -178,7 +220,7 @@ const monitorChromecastPlayer = function (player, options) {
               break;
             case 903:
             case 904:
-            // do nothing since these aren't fatal errors
+              // do nothing since these aren't fatal errors
               break;
             default:
               player.mux.emit('error', {
@@ -212,49 +254,6 @@ const monitorChromecastPlayer = function (player, options) {
         case cast.framework.events.EventType.BREAK_STARTED:
           inAdBreak = true;
           player.mux.emit('adbreakstart');
-          break;
-      }
-    }
-
-    if (inAdBreak === true) {
-      // chromecast will mix player messages with ad messages
-      // seperating out these ad events and supressing unneeded messages until the adbreak is over
-      switch (event.type) {
-        case cast.framework.events.EventType.BREAK_CLIP_LOADING:
-          if (adBreakClips !== null && event.breakClipId !== undefined) {
-            let breakClip = adBreakClips.find(o => o.id === event.breakClipId);
-            let adAssetUrl = (breakClip !== undefined && breakClip.contentUrl !== undefined) ? breakClip.contentUrl : (breakClip !== undefined && breakClip.contentId !== undefined) ? breakClip.contentId : null;
-
-            // Ad Tag URL is defined, but Chromecast does some weird auto-generated break clip stuff which doesn't carry the adTagUrl through to the generated breaks
-            // If google fix this, it can be added in the future
-            player.mux.emit('adplay', {
-              ad_asset_url: adAssetUrl
-            });
-          } else {
-            player.mux.emit('adplay');
-          }
-          break;
-        case cast.framework.events.EventType.PLAY: // cater for playback events within ad breaks, not captured by BREAK_ events
-          if (adPlaying) { player.mux.emit('adplay'); };
-          break;
-        case cast.framework.events.EventType.PAUSE: // cater for playback events within ad breaks, not captured by BREAK_ events
-          if (adPlaying) { player.mux.emit('adpause'); };
-          break;
-        case cast.framework.events.EventType.BREAK_CLIP_STARTED:
-          player.mux.emit('adplaying');
-          adPlaying = true;
-          break;
-        case cast.framework.events.EventType.PLAYING: // cater for playback events within ad breaks, not captured by BREAK_ events
-          if (adPlaying) { player.mux.emit('adplaying'); };
-          break;
-        case cast.framework.events.EventType.BREAK_CLIP_ENDED:
-          if (event.endedReason && event.endedReason === 'ERROR') { player.mux.emit('aderror'); };
-          player.mux.emit('adended');
-          adPlaying = false;
-          break;
-        case cast.framework.events.EventType.BREAK_ENDED:
-          player.mux.emit('adbreakend');
-          inAdBreak = false;
           break;
       }
     }
