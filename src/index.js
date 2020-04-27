@@ -66,7 +66,6 @@ const monitorChromecastPlayer = function (player, options) {
       player_is_paused: isPaused,
       video_source_width: videoSourceWidth,
       video_source_height: videoSourceHeight,
-      video_title: title,
       player_autoplay_on: autoplay,
       player_preload_on: undefined,
       video_source_url: mediaUrl,
