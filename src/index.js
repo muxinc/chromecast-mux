@@ -22,6 +22,7 @@ const monitorChromecastPlayer = function (player, options) {
   options.data = assign({
     player_software_name: 'Cast Application Framework Player',
     player_software_version: cast.framework.VERSION,
+    viewer_device_name: getModelInfo(),
     player_mux_plugin_name: 'chromecast-mux',
     player_mux_plugin_version: '[AIV]{version}[/AIV]'
   }, options.data);
@@ -71,10 +72,30 @@ const monitorChromecastPlayer = function (player, options) {
       video_source_url: mediaUrl,
       video_source_mime_type: contentType,
       video_source_duration: duration,
-      viewer_device_name: 'Chromecast',
       video_poster_url: postUrl,
       player_language_code: undefined
     };
+  };
+
+  const getModelInfo = () => {
+    // https://developers.google.com/cast/docs/media#video_codecs
+    try {
+      const { hardwareConcurrency, userAgent } = window.navigator;
+      const context = cast.framework.CastReceiverContext.getInstance();
+
+      // Android TV with Chromecast built-in
+      if (userAgent.includes('Android')) return 'Chromecast Built-In';
+      // Chromecast Ultra supports 'HEVC main profile, level 3.1'
+      if (context.canDisplayType('video/mp4; codecs=hev1.1.6.L93.B0')) return 'Chromecast Ultra';
+      // 3rd generation Chromecast supports 'H.264 high profile, level 4.2'
+      if (context.canDisplayType('video/mp4; codecs=avc1.64002A')) return 'Chromecast 3';
+      // 2nd and 1st generation Chromecast can be differentiated by hardwareConcurrency
+      if (hardwareConcurrency === 2) return 'Chromecast 2';
+      if (hardwareConcurrency === 1) return 'Chromecast 1';
+    } catch (e) {
+        // do nothing
+    }
+    return 'Chromecast';
   };
 
   player.muxListener = function (event) {
