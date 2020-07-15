@@ -77,7 +77,7 @@ const monitorChromecastPlayer = function (player, options) {
     };
   };
 
-  const getModelInfo = () => {
+  var getModelInfo = function () {
     // https://developers.google.com/cast/docs/media#video_codecs
     try {
       const { hardwareConcurrency, userAgent } = window.navigator;
