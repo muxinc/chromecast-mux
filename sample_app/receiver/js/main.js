@@ -5,11 +5,11 @@ var app = {
 
     initChromecastMux(playerManager, {
       debug: true,
-      automaticVideoChange: true,
+      // automaticVideoChange: true,
       data: {
         env_key: 'YOUR_ENV_KEY',
         player_init_time: Date.now(),
-        experiment_name: 'automaticVideoChange enabled'
+        video_title: 'test'
       }
     });
 
