@@ -127,7 +127,7 @@ const monitorChromecastPlayer = function (player, options) {
       switch (event.type) {
         case cast.framework.events.EventType.REQUEST_LOAD:
           if (event.requestData.media !== undefined) {
-            if(event.requestData.media.contentUrl !== undefined) {
+            if (event.requestData.media.contentUrl !== undefined) {
               mediaUrl = event.requestData.media.contentUrl;
             } else if (event.requestData.media.contentId !== undefined) {
               mediaUrl = event.requestData.media.contentId;
