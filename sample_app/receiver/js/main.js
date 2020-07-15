@@ -7,9 +7,10 @@ var app = {
       debug: true,
       // automaticVideoChange: true,
       data: {
-        env_key: 'YOUR_ENV_KEY',
+        env_key: 'ikh9lsia6bh8pj5get2vnt6hm',
         player_init_time: Date.now(),
-        video_title: 'test'
+        video_title: 'ChromeCast Test Video',
+        experiment_name: 'Updated Source URL detection'
       }
     });
 
