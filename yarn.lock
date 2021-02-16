@@ -3105,10 +3105,10 @@ mute-stream@0.0.5:
   version "0.0.5"
   resolved "https://registry.yarnpkg.com/mute-stream/-/mute-stream-0.0.5.tgz#8fbfabb0a98a253d3184331f9e8deb7372fac6c0"
 
-mux-embed@^3.0.0:
-  version "3.0.0"
-  resolved "https://registry.yarnpkg.com/mux-embed/-/mux-embed-3.0.0.tgz#2635706b5fe276deaaa57df4662f0daeb7ef0a31"
-  integrity sha512-7J4DYADNpYcGPz4JD7eHzwSMjbcGRIuchd6pZkBCUAk+ZP5m6t8KKbT6mg2G/oNo6ro+s+gIxLhPeH3i1B5bBw==
+mux-embed@^3.5.0:
+  version "3.5.0"
+  resolved "https://registry.yarnpkg.com/mux-embed/-/mux-embed-3.5.0.tgz#3bbadfe66a8e9ae81ed20b2fe8b0466194bb8d19"
+  integrity sha512-RjkWhps4PH2sKPHlPtUkgU5IUwqFRMlYtBNgQYw6ud5Jf2SCBnYElKW2iZCBEApeSHj+v0n7RP/bkWFKMhSNTg==
 
 nan@^2.9.2:
   version "2.10.0"
