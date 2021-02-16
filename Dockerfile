@@ -1,4 +1,4 @@
-FROM node:latest
+FROM node:15.4
 
 RUN mkdir /src
 WORKDIR /src
