@@ -15,8 +15,10 @@ const getModelInfo = function () {
     const { hardwareConcurrency, userAgent } = window.navigator;
     const context = cast.framework.CastReceiverContext.getInstance();
 
-    // Android TV with Chromecast built-in
-    if (userAgent.includes('Android')) return 'Chromecast Built-In';
+    // Chromecast with Google TV supports 'H.264 High Profile, level 5.1'
+    if (context.canDisplayType('video/mp4; codecs="avc1.640033')) return 'Chromecast Google TV';
+    // Android Devices with Chromecast built-in
+    if (userAgent.includes('Android')) return 'Chromecast Android';
     // Chromecast Ultra supports 'HEVC main profile, level 3.1'
     if (context.canDisplayType('video/mp4; codecs=hev1.1.6.L93.B0')) return 'Chromecast Ultra';
     // 3rd generation Chromecast supports 'H.264 high profile, level 4.2'
