@@ -16,7 +16,7 @@ const getModelInfo = function () {
     const context = cast.framework.CastReceiverContext.getInstance();
 
     // Chromecast with Google TV supports 'H.264 High Profile, level 5.1'
-    if (context.canDisplayType('video/mp4; codecs="avc1.640033')) return 'Chromecast Google TV';
+    if (context.canDisplayType('video/mp4; codecs="avc1.640033')) return 'Chromecast with Google TV';
     // Android Devices with Chromecast built-in
     if (userAgent.includes('Android')) return 'Chromecast Android';
     // Chromecast Ultra supports 'HEVC main profile, level 3.1'
