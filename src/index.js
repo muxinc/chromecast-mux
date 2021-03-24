@@ -9,6 +9,29 @@ const generateShortId = function () {
   return ('000000' + (Math.random() * Math.pow(36, 6) << 0).toString(36)).slice(-6);
 };
 
+const getModelInfo = function () {
+  // https://developers.google.com/cast/docs/media#video_codecs
+  try {
+    const { hardwareConcurrency, userAgent } = window.navigator;
+    const context = cast.framework.CastReceiverContext.getInstance();
+
+    // Chromecast with Google TV supports 'H.264 High Profile, level 5.1'
+    if (context.canDisplayType('video/mp4; codecs="avc1.640033')) return 'Chromecast with Google TV';
+    // Android Devices with Chromecast built-in
+    if (userAgent.includes('Android')) return 'Chromecast Android';
+    // Chromecast Ultra supports 'HEVC main profile, level 3.1'
+    if (context.canDisplayType('video/mp4; codecs=hev1.1.6.L93.B0')) return 'Chromecast Ultra';
+    // 3rd generation Chromecast supports 'H.264 high profile, level 4.2'
+    if (context.canDisplayType('video/mp4; codecs=avc1.64002A')) return 'Chromecast 3';
+    // 2nd and 1st generation Chromecast can be differentiated by hardwareConcurrency
+    if (hardwareConcurrency === 2) return 'Chromecast 2';
+    if (hardwareConcurrency === 1) return 'Chromecast 1';
+  } catch (e) {
+      // do nothing
+  }
+  return 'Chromecast';
+};
+
 const monitorChromecastPlayer = function (player, options) {
   const defaults = {
     // Allow customers to be in full control of the "errors" that are fatal
@@ -23,7 +46,8 @@ const monitorChromecastPlayer = function (player, options) {
     player_software_name: 'Cast Application Framework Player',
     player_software_version: cast.framework.VERSION,
     player_mux_plugin_name: 'chromecast-mux',
-    player_mux_plugin_version: '[AIV]{version}[/AIV]'
+    player_mux_plugin_version: '[AIV]{version}[/AIV]',
+    viewer_device_name: getModelInfo()
   }, options.data);
 
   // Retrieve the ID and the player element
@@ -71,7 +95,6 @@ const monitorChromecastPlayer = function (player, options) {
       video_source_url: mediaUrl,
       video_source_mime_type: contentType,
       video_source_duration: duration,
-      viewer_device_name: 'Chromecast',
       video_poster_url: postUrl,
       player_language_code: undefined
     };
@@ -134,7 +157,7 @@ const monitorChromecastPlayer = function (player, options) {
             }
 
             if (event.requestData.media.contentType !== undefined) {
-              contentType = event.requestData.media.contentType;
+              contentType = event.requestData.media.contentType.toLowerCase();
             }
 
             if (event.requestData.media.metadata !== undefined) {
