@@ -157,7 +157,7 @@ const monitorChromecastPlayer = function (player, options) {
             }
 
             if (event.requestData.media.contentType !== undefined) {
-              contentType = event.requestData.media.contentType;
+              contentType = event.requestData.media.contentType.toLowerCase();
             }
 
             if (event.requestData.media.metadata !== undefined) {
