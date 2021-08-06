@@ -1,6 +1,6 @@
 {
   "name": "chromecast-mux",
-  "version": "3.0.0",
+  "version": "3.1.0",
   "author": "Mux, Inc.",
   "description": "Mux analytics plugin for Chromecast",
   "main": "dist/chromecast-mux.js",
