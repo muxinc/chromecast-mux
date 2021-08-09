@@ -47,6 +47,7 @@ const monitorChromecastPlayer = function (player, options) {
     player_software_version: cast.framework.VERSION,
     player_mux_plugin_name: 'chromecast-mux',
     player_mux_plugin_version: '[AIV]{version}[/AIV]',
+    player_remote_played: true,
     viewer_device_name: getModelInfo()
   }, options.data);
 
