@@ -71,7 +71,7 @@ const monitorChromecastPlayer = function (player, options) {
   let videoSourceWidth = 0;
   let videoSourceHeight = 0;
   let firstPlay = true;
-  let videoChanged = false;
+  let videoChanged = true;
   let isSeeking = false;
   let inAdBreak = false;
   let adPlaying = false;
@@ -242,6 +242,7 @@ const monitorChromecastPlayer = function (player, options) {
           }
           isPaused = false;
           player.mux.emit('playing');
+          firstPlay = false;
           break;
         case cast.framework.events.EventType.ERROR:
           if (!options.automaticErrorTracking) { return; }
