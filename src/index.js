@@ -150,14 +150,6 @@ const monitorChromecastPlayer = function (player, options) {
       // Not in an adbreak, regular playback monitoring
       switch (event.type) {
         case cast.framework.events.EventType.REQUEST_LOAD:
-          if (options.automaticVideoChange === false && !firstPlay) {
-            // A video is already playing, but the user is changing to a new video
-            // without an automatic video change configured
-            // we need to let them set metadata first, and then have a play request get sent
-            // so short circuit this block to stop events getting sent too early
-            videoChanged = true;
-            break;
-          }
           if (event.requestData.media !== undefined) {
             if (event.requestData.media.contentUrl !== undefined) {
               mediaUrl = event.requestData.media.contentUrl;
@@ -184,6 +176,15 @@ const monitorChromecastPlayer = function (player, options) {
           }
           if (event.requestData.autoplay !== undefined) {
             autoplay = event.requestData.autoplay;
+          }
+
+          if (options.automaticVideoChange === false && !firstPlay) {
+            // A video is already playing, but the user is changing to a new video
+            // without an automatic video change configured
+            // we need to let them set metadata first, and then have a play request get sent
+            // so short circuit this block to stop events getting sent too early
+            videoChanged = true;
+            break;
           }
 
           // the user is expecting us to detect video changes
