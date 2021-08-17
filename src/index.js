@@ -71,7 +71,6 @@ const monitorChromecastPlayer = function (player, options) {
   let videoSourceWidth = 0;
   let videoSourceHeight = 0;
   let firstPlay = true;
-  let videoChanged = true;
   let isSeeking = false;
   let inAdBreak = false;
   let adPlaying = false;
@@ -102,7 +101,7 @@ const monitorChromecastPlayer = function (player, options) {
   };
 
   player.muxListener = function (event) {
-    log.info('MuxCast: event ', event);
+    options.debug ? log.info('MuxCast: event ', event) : null;
 
     if (inAdBreak) {
       // Chromecast will mix player messages with ad messages
@@ -150,6 +149,9 @@ const monitorChromecastPlayer = function (player, options) {
       // Not in an adbreak, regular playback monitoring
       switch (event.type) {
         case cast.framework.events.EventType.REQUEST_LOAD:
+          // reset the playhead position as we're loading a new source
+          currentTime = 0;
+
           if (event.requestData.media !== undefined) {
             if (event.requestData.media.contentUrl !== undefined) {
               mediaUrl = event.requestData.media.contentUrl;
@@ -183,14 +185,12 @@ const monitorChromecastPlayer = function (player, options) {
             // without an automatic video change configured
             // we need to let them set metadata first, and then have a play request get sent
             // so short circuit this block to stop events getting sent too early
-            videoChanged = true;
             break;
           }
 
           // the user is expecting us to detect video changes
           if (options.automaticVideoChange && !firstPlay) {
             player.mux.emit('videochange', { video_title: title });
-            videoChanged = true;
           }
 
           firstPlay = false;
@@ -198,12 +198,8 @@ const monitorChromecastPlayer = function (player, options) {
           player.mux.emit('loadstart');
           player.mux.emit('play');
           break;
-        case cast.framework.events.EventType.MEDIA_FINISHED:
-        case cast.framework.events.EventType.LIVE_ENDED:
-          if (!videoChanged) {
-            player.mux.emit('ended');
-          }
-          videoChanged = false;
+        case cast.framework.events.EventType.ENDED:
+          player.mux.emit('ended');
           break;
         case cast.framework.events.EventType.MEDIA_STATUS:
           if (event.mediaStatus.videoInfo !== undefined) {
