@@ -180,19 +180,12 @@ const monitorChromecastPlayer = function (player, options) {
             autoplay = event.requestData.autoplay;
           }
 
-          if (options.automaticVideoChange === false && !firstPlay) {
-            // A video is already playing, but the user is changing to a new video
-            // without an automatic video change configured
-            // we need to let them set metadata first, and then have a play request get sent
-            // so short circuit this block to stop events getting sent too early
-            break;
-          }
-
           // the user is expecting us to detect video changes
           if (options.automaticVideoChange && !firstPlay) {
             player.mux.emit('videochange', { video_title: title });
           }
-
+          break;
+        case cast.framework.events.EventType.LOAD_START:
           firstPlay = false;
 
           player.mux.emit('loadstart');
