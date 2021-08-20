@@ -144,38 +144,34 @@ const monitorChromecastPlayer = function (player, options) {
     } else {
       // Not in an adbreak, regular playback monitoring
       switch (event.type) {
-        case cast.framework.events.EventType.REQUEST_LOAD:
+        case cast.framework.events.EventType.PLAYER_LOADING:
           // reset the playhead position as we're loading a new source
           currentTime = 0;
 
-          if (event.requestData.media !== undefined) {
-            if (event.requestData.media.contentUrl !== undefined) {
-              mediaUrl = event.requestData.media.contentUrl;
-            } else if (event.requestData.media.contentId !== undefined) {
-              mediaUrl = event.requestData.media.contentId;
+          if (event.media !== undefined) {
+            if (event.media.contentUrl !== undefined) {
+              mediaUrl = event.media.contentUrl;
+            } else if (event.media.contentId !== undefined) {
+              mediaUrl = event.media.contentId;
             }
 
-            if (event.requestData.media.contentType !== undefined) {
-              contentType = event.requestData.media.contentType.toLowerCase();
+            if (event.media.contentType !== undefined) {
+              contentType = event.media.contentType.toLowerCase();
             }
 
-            if (event.requestData.media.metadata !== undefined) {
-              if (event.requestData.media.metadata.images !== undefined && event.requestData.media.metadata.images.length > 0) {
-                postUrl = event.requestData.media.metadata.images[0].url;
+            if (event.media.metadata !== undefined) {
+              if (event.media.metadata.images !== undefined && event.media.metadata.images.length > 0) {
+                postUrl = event.media.metadata.images[0].url;
               }
             }
 
-            if (event.requestData.media.breakClips !== undefined) {
-              adBreakClips = event.requestData.media.breakClips;
+            if (event.media.breakClips !== undefined) {
+              adBreakClips = event.media.breakClips;
             }
-          }
-          if (event.requestData.autoplay !== undefined) {
-            autoplay = event.requestData.autoplay;
           }
 
           break;
         case cast.framework.events.EventType.LOAD_START:
-
           player.mux.emit('loadstart');
           player.mux.emit('play');
           break;
