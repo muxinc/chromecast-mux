@@ -178,6 +178,12 @@ const monitorChromecastPlayer = function (player, options) {
         case cast.framework.events.EventType.ENDED:
           player.mux.emit('ended');
           break;
+        case cast.framework.events.EventType.MEDIA_FINISHED:
+          if (cast.framework.events.EndedReason.STOPPED === event.endedReason) {
+            isPaused = true;
+            player.mux.emit('pause');
+          }
+          break;
         case cast.framework.events.EventType.MEDIA_STATUS:
           if (event.mediaStatus.videoInfo !== undefined) {
             // Note: it appears the videoInfo field is always undefined
