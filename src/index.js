@@ -35,9 +35,7 @@ const getModelInfo = function () {
 const monitorChromecastPlayer = function (player, options) {
   const defaults = {
     // Allow customers to be in full control of the "errors" that are fatal
-    automaticErrorTracking: true,
-    // Allow customers to emit videoChange, or set this to true for us to attempt to do this
-    automaticVideoChange: false
+    automaticErrorTracking: true
   };
 
   options = assign(defaults, options);
@@ -62,7 +60,6 @@ const monitorChromecastPlayer = function (player, options) {
 
   let currentTime = 0;
   let autoplay;
-  let title;
   let mediaUrl;
   let contentType;
   let postUrl;
@@ -70,7 +67,6 @@ const monitorChromecastPlayer = function (player, options) {
   let isPaused = false;
   let videoSourceWidth = 0;
   let videoSourceHeight = 0;
-  let firstPlay = true;
   let isSeeking = false;
   let inAdBreak = false;
   let adPlaying = false;
@@ -164,9 +160,6 @@ const monitorChromecastPlayer = function (player, options) {
             }
 
             if (event.requestData.media.metadata !== undefined) {
-              if (event.requestData.media.metadata.title !== undefined) {
-                title = event.requestData.media.metadata.title;
-              }
               if (event.requestData.media.metadata.images !== undefined && event.requestData.media.metadata.images.length > 0) {
                 postUrl = event.requestData.media.metadata.images[0].url;
               }
@@ -180,13 +173,8 @@ const monitorChromecastPlayer = function (player, options) {
             autoplay = event.requestData.autoplay;
           }
 
-          // the user is expecting us to detect video changes
-          if (options.automaticVideoChange && !firstPlay) {
-            player.mux.emit('videochange', { video_title: title });
-          }
           break;
         case cast.framework.events.EventType.LOAD_START:
-          firstPlay = false;
 
           player.mux.emit('loadstart');
           player.mux.emit('play');
@@ -231,7 +219,6 @@ const monitorChromecastPlayer = function (player, options) {
           }
           isPaused = false;
           player.mux.emit('playing');
-          firstPlay = false;
           break;
         case cast.framework.events.EventType.ERROR:
           if (!options.automaticErrorTracking) { return; }
