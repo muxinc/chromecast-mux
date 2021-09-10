@@ -97,7 +97,7 @@ const monitorChromecastPlayer = function (player, options) {
   };
 
   player.muxListener = function (event) {
-    options.debug ? log.info('MuxCast: event ', event) : null;
+    log.info('MuxCast: event ', event);
 
     if (inAdBreak) {
       // Chromecast will mix player messages with ad messages
