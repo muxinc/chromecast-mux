@@ -35,9 +35,7 @@ const getModelInfo = function () {
 const monitorChromecastPlayer = function (player, options) {
   const defaults = {
     // Allow customers to be in full control of the "errors" that are fatal
-    automaticErrorTracking: true,
-    // Allow customers to emit videoChange, or set this to true for us to attempt to do this
-    automaticVideoChange: false
+    automaticErrorTracking: true
   };
 
   options = assign(defaults, options);
@@ -62,7 +60,6 @@ const monitorChromecastPlayer = function (player, options) {
 
   let currentTime = 0;
   let autoplay;
-  let title;
   let mediaUrl;
   let contentType;
   let postUrl;
@@ -70,8 +67,6 @@ const monitorChromecastPlayer = function (player, options) {
   let isPaused = false;
   let videoSourceWidth = 0;
   let videoSourceHeight = 0;
-  let firstPlay = true;
-  let videoChanged = false;
   let isSeeking = false;
   let inAdBreak = false;
   let adPlaying = false;
@@ -149,53 +144,45 @@ const monitorChromecastPlayer = function (player, options) {
     } else {
       // Not in an adbreak, regular playback monitoring
       switch (event.type) {
-        case cast.framework.events.EventType.REQUEST_LOAD:
-          if (event.requestData.media !== undefined) {
-            if (event.requestData.media.contentUrl !== undefined) {
-              mediaUrl = event.requestData.media.contentUrl;
-            } else if (event.requestData.media.contentId !== undefined) {
-              mediaUrl = event.requestData.media.contentId;
+        case cast.framework.events.EventType.PLAYER_LOADING:
+          // reset the playhead position as we're loading a new source
+          currentTime = 0;
+
+          if (event.media !== undefined) {
+            if (event.media.contentUrl !== undefined) {
+              mediaUrl = event.media.contentUrl;
+            } else if (event.media.contentId !== undefined) {
+              mediaUrl = event.media.contentId;
             }
 
-            if (event.requestData.media.contentType !== undefined) {
-              contentType = event.requestData.media.contentType.toLowerCase();
+            if (event.media.contentType !== undefined) {
+              contentType = event.media.contentType.toLowerCase();
             }
 
-            if (event.requestData.media.metadata !== undefined) {
-              if (event.requestData.media.metadata.title !== undefined) {
-                title = event.requestData.media.metadata.title;
+            if (event.media.metadata !== undefined) {
+              if (event.media.metadata.images !== undefined && event.media.metadata.images.length > 0) {
+                postUrl = event.media.metadata.images[0].url;
               }
-              if (event.requestData.media.metadata.images !== undefined && event.requestData.media.metadata.images.length > 0) {
-                postUrl = event.requestData.media.metadata.images[0].url;
-              }
             }
 
-            if (event.requestData.media.breakClips !== undefined) {
-              adBreakClips = event.requestData.media.breakClips;
+            if (event.media.breakClips !== undefined) {
+              adBreakClips = event.media.breakClips;
             }
           }
-          if (event.requestData.autoplay !== undefined) {
-            autoplay = event.requestData.autoplay;
-          }
 
-          // the user is expecting us to detect video changes
-          if (options.automaticVideoChange && !firstPlay) {
-            player.mux.emit('ended');
-            player.mux.emit('videochange', { video_title: title });
-            videoChanged = true;
-          }
-
-          firstPlay = false;
-
+          break;
+        case cast.framework.events.EventType.LOAD_START:
           player.mux.emit('loadstart');
           player.mux.emit('play');
           break;
+        case cast.framework.events.EventType.ENDED:
+          player.mux.emit('ended');
+          break;
         case cast.framework.events.EventType.MEDIA_FINISHED:
-        case cast.framework.events.EventType.LIVE_ENDED:
-          if (!videoChanged) {
-            player.mux.emit('ended');
+          if (cast.framework.events.EndedReason.STOPPED === event.endedReason) {
+            isPaused = true;
+            player.mux.emit('pause');
           }
-          videoChanged = false;
           break;
         case cast.framework.events.EventType.MEDIA_STATUS:
           if (event.mediaStatus.videoInfo !== undefined) {
