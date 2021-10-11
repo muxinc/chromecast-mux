@@ -278,17 +278,36 @@ const monitorChromecastPlayer = function (player, options) {
   mux.init(playerID, options);
   player.mux.emit('playerready');
 
-  player.mux.destroy = function () {
-    if (typeof player.muxListener !== 'undefined') {
-      player.removeEventListener(cast.framework.events.category.CORE, player.muxListener);
-      player.removeEventListener(cast.framework.events.category.FINE, player.muxListener);
-      player.removeEventListener(cast.framework.events.category.DEBUG, player.muxListener);
-      delete player.muxListener;
-      player.mux.emit('destroy');
-      player.mux.emit = function () {};
-      player.mux.destroy = function () {};
+  // Okay yes, this is silly. We originally introduced a weird ability to
+  // destroy a different player monitor than this one, so we're going to
+  // allow this for now. This should be changed to the below next time we
+  // major version bump this SDK.
+  player.mux.destroy = function (localPlayer) {
+    const playerToDestroy = localPlayer || player;
+
+    if (typeof playerToDestroy.muxListener !== 'undefined') {
+      playerToDestroy.removeEventListener(cast.framework.events.category.CORE, playerToDestroy.muxListener);
+      playerToDestroy.removeEventListener(cast.framework.events.category.FINE, playerToDestroy.muxListener);
+      playerToDestroy.removeEventListener(cast.framework.events.category.DEBUG, playerToDestroy.muxListener);
+      delete playerToDestroy.muxListener;
+      playerToDestroy.mux.emit('destroy');
+      playerToDestroy.mux.emit = function () {};
+      playerToDestroy.mux.destroy = function () {};
     }
   };
+
+  // NOTE: Use this when we next major version bump this SDK.
+  // player.mux.destroy = function () {
+  //   if (typeof player.muxListener !== 'undefined') {
+  //     player.removeEventListener(cast.framework.events.category.CORE, player.muxListener);
+  //     player.removeEventListener(cast.framework.events.category.FINE, player.muxListener);
+  //     player.removeEventListener(cast.framework.events.category.DEBUG, player.muxListener);
+  //     delete player.muxListener;
+  //     player.mux.emit('destroy');
+  //     player.mux.emit = function () {};
+  //     player.mux.destroy = function () {};
+  //   }
+  // };
 };
 
 export default monitorChromecastPlayer;
