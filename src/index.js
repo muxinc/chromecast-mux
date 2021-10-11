@@ -278,7 +278,7 @@ const monitorChromecastPlayer = function (player, options) {
   mux.init(playerID, options);
   player.mux.emit('playerready');
 
-  player.mux.destroy = function (player) {
+  player.mux.destroy = function () {
     if (typeof player.muxListener !== 'undefined') {
       player.removeEventListener(cast.framework.events.category.CORE, player.muxListener);
       player.removeEventListener(cast.framework.events.category.FINE, player.muxListener);
