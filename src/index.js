@@ -6,7 +6,7 @@ const assign = mux.utils.assign;
 
 // Helper function to generate "unique" IDs for the player if your player does not have one built in
 const generateShortId = function () {
-  return ('000000' + (Math.random() * Math.pow(36, 6) << 0).toString(36)).slice(-6);
+  return ('000001' + (Math.random() * Math.pow(36, 6) << 0).toString(36)).slice(-6);
 };
 
 const getModelInfo = function () {
